@@ -26,6 +26,6 @@ chromadb
 pytest
 pydantic-settings
 
+
 #genai SDK
 google-genai
-pydantic-settings
