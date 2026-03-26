@@ -1,10 +1,11 @@
 from google import genai
 from app.core.config import settings
 
-client = genai.Client(api_key=settings.google_api_key)
+
 
 def get_gemini_response(user_input: str) -> str:
     try:
+        client = genai.Client(api_key=settings.google_api_key)
         response = client.models.generate_content(
             model="models/gemini-2.5-flash-lite", 
             contents=user_input
