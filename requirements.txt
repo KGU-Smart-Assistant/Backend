@@ -21,6 +21,7 @@ openai
 tiktoken
 langchain
 chromadb
+docling
 
 # 테스트
 pytest

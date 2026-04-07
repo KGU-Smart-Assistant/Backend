@@ -4,7 +4,15 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
-SourceType = Literal["notice",'academic',"scholarship",'faq']
+SourceType = Literal[
+    "notice",
+    "pdf",
+    "docx",
+    "image",
+    "html",
+    "markdown",
+    "file",
+]
 
 
 class DocumentBase(BaseModel):
