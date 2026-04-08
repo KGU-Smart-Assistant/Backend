@@ -3,10 +3,6 @@
 __all__ = [
     "chunk_document",
     "chunk_documents",
-    "collect_documents_with_crawl4ai",
-    "Crawl4AICollectorConfig",
-    "DoclingCollectorConfig",
-    "collect_documents_with_docling",
     "embed_chunks",
     "embed_text",
     "embed_texts",
@@ -17,18 +13,6 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    if name in {"Crawl4AICollectorConfig", "collect_documents_with_crawl4ai"}:
-        from app.services.crawl4ai_collector import (
-            Crawl4AICollectorConfig,
-            collect_documents_with_crawl4ai,
-        )
-
-        exports = {
-            "Crawl4AICollectorConfig": Crawl4AICollectorConfig,
-            "collect_documents_with_crawl4ai": collect_documents_with_crawl4ai,
-        }
-        return exports[name]
-
     if name in {"embed_text", "embed_texts", "embed_chunks"}:
         from app.services.embedding_service import embed_chunks, embed_text, embed_texts
 
@@ -45,18 +29,6 @@ def __getattr__(name: str):
         exports = {
             "chunk_document": chunk_document,
             "chunk_documents": chunk_documents,
-        }
-        return exports[name]
-
-    if name in {"DoclingCollectorConfig", "collect_documents_with_docling"}:
-        from app.services.docling_collector import (
-            DoclingCollectorConfig,
-            collect_documents_with_docling,
-        )
-
-        exports = {
-            "DoclingCollectorConfig": DoclingCollectorConfig,
-            "collect_documents_with_docling": collect_documents_with_docling,
         }
         return exports[name]
 

@@ -7,11 +7,11 @@ from datetime import datetime
 from typing import Deque, Dict, List, Optional, Set, Tuple
 from urllib.parse import urldefrag, urljoin, urlparse
 
-from app.schemas import Document
-from app.services.docling_collector import (
+from app.crawlers.docling_collector import (
     DoclingCollectorConfig,
     collect_documents_with_docling,
 )
+from app.schemas import Document
 
 DOCUMENT_EXTENSIONS = {
     ".pdf": "pdf",
