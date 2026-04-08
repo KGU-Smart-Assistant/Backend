@@ -3,20 +3,32 @@
 __all__ = [
     "chunk_document",
     "chunk_documents",
+    "collect_documents_with_crawl4ai",
+    "Crawl4AICollectorConfig",
     "DoclingCollectorConfig",
     "collect_documents_with_docling",
     "embed_chunks",
     "embed_text",
     "embed_texts",
     "get_gemini_response",
-    "NoticeCrawlerConfig",
-    "crawl_notice_documents",
     "search",
     "search_documents",
 ]
 
 
 def __getattr__(name: str):
+    if name in {"Crawl4AICollectorConfig", "collect_documents_with_crawl4ai"}:
+        from app.services.crawl4ai_collector import (
+            Crawl4AICollectorConfig,
+            collect_documents_with_crawl4ai,
+        )
+
+        exports = {
+            "Crawl4AICollectorConfig": Crawl4AICollectorConfig,
+            "collect_documents_with_crawl4ai": collect_documents_with_crawl4ai,
+        }
+        return exports[name]
+
     if name in {"embed_text", "embed_texts", "embed_chunks"}:
         from app.services.embedding_service import embed_chunks, embed_text, embed_texts
 
@@ -52,15 +64,6 @@ def __getattr__(name: str):
         from app.services.gemini_service import get_gemini_response
 
         return get_gemini_response
-
-    if name in {"NoticeCrawlerConfig", "crawl_notice_documents"}:
-        from app.services.notice_crawler import NoticeCrawlerConfig, crawl_notice_documents
-
-        exports = {
-            "NoticeCrawlerConfig": NoticeCrawlerConfig,
-            "crawl_notice_documents": crawl_notice_documents,
-        }
-        return exports[name]
 
     if name in {"search", "search_documents"}:
         from app.services.search_service import search, search_documents

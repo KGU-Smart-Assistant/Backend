@@ -22,6 +22,7 @@ tiktoken
 langchain
 chromadb
 docling
+crawl4ai
 
 # 테스트
 pytest
