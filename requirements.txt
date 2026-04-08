@@ -31,3 +31,4 @@ pydantic-settings
 
 #genai SDK
 google-genai
+PyYAML
