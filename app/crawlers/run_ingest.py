@@ -9,11 +9,13 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.crawlers import (
+    chunk_documents,
     Crawl4AICollectorConfig,
     DoclingCollectorConfig,
     collect_documents_with_crawl4ai,
+    embed_chunks,
+    select_latest_documents,
 )
-from app.services import chunk_documents, embed_chunks
 
 DEFAULT_INCLUDE_PATTERNS = (
     "notice",
@@ -76,7 +78,9 @@ def main() -> None:
 
     for source in sources:
         crawler_config = build_crawler_config(source)
-        documents = collect_documents_with_crawl4ai(crawler_config)
+        raw_documents = collect_documents_with_crawl4ai(crawler_config)
+        dedup_result = select_latest_documents(raw_documents)
+        documents = dedup_result.documents
         chunks = chunk_documents(documents, chunk_size=1000, chunk_overlap=200)
         embedded_count = 0
 
@@ -91,7 +95,10 @@ def main() -> None:
         total_chunks += len(chunks)
 
         print(
-            f"[{source['name']}] documents={len(documents)} "
+            f"[{source['name']}] raw_documents={dedup_result.total_input} "
+            f"documents={len(documents)} "
+            f"exact_duplicates_removed={dedup_result.exact_duplicates_removed} "
+            f"version_duplicates_removed={dedup_result.version_duplicates_removed} "
             f"chunks={len(chunks)} embedded_chunks={embedded_count}"
         )
 
