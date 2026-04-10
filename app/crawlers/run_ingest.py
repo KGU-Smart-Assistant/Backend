@@ -13,7 +13,6 @@ from app.crawlers import (
     Crawl4AICollectorConfig,
     DoclingCollectorConfig,
     collect_documents_with_crawl4ai,
-    embed_chunks,
     select_latest_documents,
 )
 
@@ -39,6 +38,12 @@ DEFAULT_EXCLUDE_PATTERNS = (
     "javascript:",
     "mailto:",
 )
+
+
+def embed_chunks(*args, **kwargs):
+    from app.crawlers import embed_chunks as _embed_chunks
+
+    return _embed_chunks(*args, **kwargs)
 
 
 def load_sources_config(config_path: Path) -> List[Dict[str, Any]]:
