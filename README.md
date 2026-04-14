@@ -29,6 +29,9 @@ tests/
 
 ## Run
 
+```
+.env 파일 만들고
+```
 ```bash
 uvicorn app.main:app --reload
 ```

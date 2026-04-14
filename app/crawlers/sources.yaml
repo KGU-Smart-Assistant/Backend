@@ -1,0 +1,20 @@
+sources:
+  - name: academic_notices
+    category: academic
+    department: academic_affairs
+    seed_urls:
+      - "https://www.kyonggi.ac.kr/www/contents.do?key=7790"
+    max_pages: 5
+    max_depth: 1
+    embed: true
+    embedding_limit: 2
+
+  - name: scholarship_notices
+    category: scholarship
+    department: student_affairs
+    seed_urls:
+      - "https://www.kyonggi.ac.kr/www/contents.do?key=5179"
+    max_pages: 5
+    max_depth: 1
+    embed: true
+    embedding_limit: 2
