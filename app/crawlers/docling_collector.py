@@ -23,6 +23,7 @@ class DoclingCollectorConfig:
     department: Optional[str] = None
     headers: Dict[str, str] = field(default_factory=dict)
     skip_unsupported: bool = False
+    skip_images: bool = False
     timeout_seconds: int = 10
 
 
@@ -44,6 +45,8 @@ def collect_documents_with_docling(
                 headers=config.headers,
                 timeout_seconds=config.timeout_seconds,
             )
+            if source_type == "image" and config.skip_images:
+                continue
             result = converter.convert(source, headers=config.headers or None)
         except ValueError:
             if config.skip_unsupported:
@@ -71,7 +74,9 @@ def collect_documents_with_docling(
                 content=content,
                 category=config.category,
                 department=config.department,
+                author_department=config.department,
                 published_at=None,
+                attachment_urls=[],
                 collected_at=collected_at,
             )
         )

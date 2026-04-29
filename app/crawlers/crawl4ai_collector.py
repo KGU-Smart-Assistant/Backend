@@ -5,12 +5,14 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Deque, Dict, List, Optional, Set, Tuple
-from urllib.parse import urldefrag, urljoin, urlparse
+from urllib.parse import parse_qsl, urlencode, urldefrag, urljoin, urlparse, urlunparse
 
 from app.crawlers.docling_collector import (
     DoclingCollectorConfig,
     collect_documents_with_docling,
 )
+from app.crawlers.parsing.parser_router import ParserRouter
+from app.crawlers.parsing.schemas import ParseContext
 from app.schemas import Document
 
 DOCUMENT_EXTENSIONS = {
@@ -44,10 +46,12 @@ DEFAULT_EXCLUDE_PATTERNS = (
     "login",
     "logout",
     "signup",
-    "search",
+    "search.do",
     "javascript:",
     "mailto:",
 )
+
+PARSER_ROUTER = ParserRouter()
 
 
 @dataclass
@@ -58,11 +62,16 @@ class Crawl4AICollectorConfig:
     category: Optional[str] = None
     department: Optional[str] = None
     include_patterns: Tuple[str, ...] = DEFAULT_INCLUDE_PATTERNS
+    follow_patterns: Optional[Tuple[str, ...]] = None
+    collect_patterns: Optional[Tuple[str, ...]] = None
     exclude_patterns: Tuple[str, ...] = DEFAULT_EXCLUDE_PATTERNS
     allowed_domains: Optional[Set[str]] = None
     headless: bool = True
     word_count_threshold: int = 1
     page_timeout_ms: int = 30000
+    collect_seed_pages: bool = True
+    allowed_keyword_filters: Optional[Tuple[str, ...]] = None
+    blocked_keyword_filters: Optional[Tuple[str, ...]] = None
     docling_config: DoclingCollectorConfig = field(default_factory=DoclingCollectorConfig)
 
 
@@ -97,9 +106,7 @@ async def _collect_documents_with_crawl4ai(
         page_timeout=config.page_timeout_ms,
     )
 
-    queue: Deque[Tuple[str, int]] = deque(
-        (_normalize_url(url), 0) for url in config.seed_urls
-    )
+    queue: Deque[Tuple[str, int]] = deque((_normalize_url(url), 0) for url in config.seed_urls)
     visited_html_urls: Set[str] = set()
     collected_doc_urls: Set[str] = set()
     documents: List[Document] = []
@@ -110,7 +117,7 @@ async def _collect_documents_with_crawl4ai(
             current_url, depth = queue.popleft()
             if current_url in visited_html_urls:
                 continue
-            if not _is_allowed_url(current_url, allowed_domains, config):
+            if depth != 0 and not _is_allowed_url(current_url, allowed_domains, config):
                 continue
 
             result = await crawler.arun(url=current_url, config=run_config)
@@ -119,15 +126,22 @@ async def _collect_documents_with_crawl4ai(
             if not getattr(result, "success", False):
                 continue
 
-            html_document = _build_html_document(
+            if _should_collect_html_url(
                 url=current_url,
-                result=result,
-                category=config.category,
-                department=config.department,
-                collected_at=collected_at,
-            )
-            if html_document is not None:
-                documents.append(html_document)
+                config=config,
+                is_seed=depth == 0,
+            ):
+                html_document = _build_html_document(
+                    url=current_url,
+                    result=result,
+                    category=config.category,
+                    department=config.department,
+                    collected_at=collected_at,
+                    allowed_keyword_filters=config.allowed_keyword_filters,
+                    blocked_keyword_filters=config.blocked_keyword_filters,
+                )
+                if html_document is not None:
+                    documents.append(html_document)
 
             discovered_html_urls, discovered_doc_urls = _extract_links(
                 base_url=current_url,
@@ -135,13 +149,12 @@ async def _collect_documents_with_crawl4ai(
                 allowed_domains=allowed_domains,
                 config=config,
             )
-
             collected_doc_urls.update(discovered_doc_urls)
 
             if depth >= config.max_depth:
                 continue
 
-            for next_url in discovered_html_urls:
+            for next_url in sorted(discovered_html_urls, key=_html_url_priority):
                 if next_url not in visited_html_urls:
                     queue.append((next_url, depth + 1))
 
@@ -165,31 +178,33 @@ def _build_html_document(
     category: Optional[str],
     department: Optional[str],
     collected_at: datetime,
+    allowed_keyword_filters: Optional[Tuple[str, ...]] = None,
+    blocked_keyword_filters: Optional[Tuple[str, ...]] = None,
 ) -> Optional[Document]:
-    markdown = getattr(result, "markdown", None)
-    raw_markdown = getattr(markdown, "fit_markdown", None) or getattr(
-        markdown, "raw_markdown", None
+    parsed = PARSER_ROUTER.parse(
+        result=result,
+        context=ParseContext(
+            url=url,
+            category=category,
+            department=department,
+            allowed_keyword_filters=allowed_keyword_filters,
+            blocked_keyword_filters=blocked_keyword_filters,
+        ),
     )
-    if not raw_markdown:
-        return None
-
-    content = raw_markdown.strip()
-    if not content:
-        return None
-
-    title = _extract_title_from_crawl_result(result, content)
-    if not title:
+    if parsed is None:
         return None
 
     return Document(
         doc_id=_build_doc_id(url),
         source_type="html",
         source_url=url,
-        title=title,
-        content=content,
+        title=parsed.title,
+        content=parsed.content,
         category=category,
         department=department,
-        published_at=None,
+        author_department=parsed.author_department,
+        published_at=parsed.published_at,
+        attachment_urls=parsed.attachment_urls,
         collected_at=collected_at,
     )
 
@@ -220,27 +235,36 @@ def _extract_links(
     return html_urls, doc_urls
 
 
-def _extract_title_from_crawl_result(result, content: str) -> Optional[str]:
-    metadata = getattr(result, "metadata", None) or {}
-    for key in ("title", "og:title"):
-        value = metadata.get(key)
-        if value:
-            normalized = _normalize_text(value)
-            if normalized and not _should_skip_title(normalized):
-                return normalized[:300]
-
-    for line in content.splitlines():
-        normalized = _normalize_text(re.sub(r"^#+\s*", "", line))
-        if not normalized or _should_skip_title(normalized):
-            continue
-        return normalized[:300]
-
-    return None
-
-
 def _looks_like_document_url(url: str) -> bool:
     lowered = url.lower()
     return any(ext in lowered for ext in DOCUMENT_EXTENSIONS)
+
+
+def _should_collect_html_url(
+    url: str,
+    config: Crawl4AICollectorConfig,
+    is_seed: bool,
+) -> bool:
+    if is_seed and not config.collect_seed_pages:
+        return False
+
+    patterns = config.collect_patterns or config.include_patterns
+    if not patterns:
+        return True
+
+    lowered = url.lower()
+    return any(pattern in lowered for pattern in patterns)
+
+
+def _html_url_priority(url: str) -> Tuple[int, str]:
+    lowered = url.lower()
+    if "selectbbsnttview.do" in lowered:
+        return (0, lowered)
+    if "selectbbsnttlist.do" in lowered:
+        return (1, lowered)
+    if "contents.do" in lowered:
+        return (2, lowered)
+    return (3, lowered)
 
 
 def _is_allowed_url(
@@ -263,7 +287,11 @@ def _is_allowed_url(
     if _looks_like_document_url(url):
         return True
 
-    return any(pattern in lowered for pattern in config.include_patterns)
+    patterns = config.follow_patterns or config.include_patterns
+    if not patterns:
+        return True
+
+    return any(pattern in lowered for pattern in patterns)
 
 
 def _normalize_domain(domain: str) -> str:
@@ -275,17 +303,22 @@ def _normalize_domain(domain: str) -> str:
 
 def _normalize_url(url: str) -> str:
     clean_url, _ = urldefrag(url)
-    return clean_url.rstrip("/")
-
-
-def _normalize_text(value: str) -> str:
-    return re.sub(r"\s+", " ", value).strip()
-
-
-def _should_skip_title(value: str) -> bool:
-    lowered = value.lower()
-    skip_tokens = {"주메뉴", "닫기", "language", "login", "로그인", "검색"}
-    return any(token in lowered for token in skip_tokens)
+    parsed = urlparse(clean_url)
+    normalized_params = ""
+    if parsed.params and not re.fullmatch(r"jsessionid=[^/?#]+", parsed.params, flags=re.IGNORECASE):
+        normalized_params = parsed.params
+    normalized_query = urlencode(sorted(parse_qsl(parsed.query, keep_blank_values=True)))
+    rebuilt = urlunparse(
+        (
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            normalized_params,
+            normalized_query,
+            parsed.fragment,
+        )
+    )
+    return rebuilt.rstrip("/")
 
 
 def _build_doc_id(source_url: str) -> str:

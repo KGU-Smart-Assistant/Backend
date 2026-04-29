@@ -1,4 +1,6 @@
+import json
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from app.crawlers import run_ingest
 from app.schemas import Document
@@ -74,6 +76,12 @@ def test_run_ingest_executes_end_to_end_pipeline(monkeypatch, capsys) -> None:
         lambda _: documents,
     )
     monkeypatch.setattr(run_ingest, "embed_chunks", lambda chunks: [object() for _ in chunks])
+    monkeypatch.setattr(run_ingest, "default_report_output_dir", lambda: Path(".tmp/test-reports"))
+    monkeypatch.setattr(
+        run_ingest,
+        "write_ingest_report",
+        lambda report, output_dir: output_dir / "ingest-report-test.json",
+    )
 
     run_ingest.main()
 
@@ -85,3 +93,96 @@ def test_run_ingest_executes_end_to_end_pipeline(monkeypatch, capsys) -> None:
     assert "total_documents=2" in captured.out
     assert "total_chunks=4" in captured.out
     assert "total_embedded_chunks=2" in captured.out
+    assert "ingest_report=.tmp\\test-reports\\ingest-report-test.json" in captured.out
+
+
+def test_load_sources_config_expands_generated_sources() -> None:
+    config_path = Path(".tmp/generated-sources-test.yaml")
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        config_path.write_text(
+            json.dumps(
+                {
+                    "sources": [{"name": "explicit_source", "seed_urls": ["https://example.com/a"]}],
+                    "department_sites": [
+                        {
+                            "slug": "example_department",
+                            "department": "example_department",
+                            "base_url": "https://example.com/index.do",
+                            "site_type": "portal",
+                        }
+                    ],
+                    "source_blueprints": [
+                    {
+                        "name_suffix": "notice",
+                        "applies_to": ["portal"],
+                        "category": "notice",
+                        "seed_url_template": "{base_url}/notice",
+                        "follow_patterns": ["selectbbsnttlist.do", "selectbbsnttview.do"],
+                        "collect_patterns": ["selectbbsnttview.do"],
+                    }
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        sources = run_ingest.load_sources_config(config_path)
+
+        assert [source["name"] for source in sources] == [
+            "explicit_source",
+            "example_department_notice",
+        ]
+        assert sources[1]["department"] == "example_department"
+        assert sources[1]["seed_urls"] == ["https://example.com/index.do/notice"]
+    finally:
+        config_path.unlink(missing_ok=True)
+
+
+def test_load_sources_config_applies_site_source_overrides() -> None:
+    config_path = Path(".tmp/generated-sources-override-test.yaml")
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        config_path.write_text(
+            json.dumps(
+                {
+                    "department_sites": [
+                        {
+                            "slug": "example_department",
+                            "department": "example_department",
+                            "base_url": "https://example.com/index.do",
+                            "site_type": "portal",
+                            "source_overrides": {
+                                "faq": {
+                                    "seed_urls": ["https://example.com/faq"],
+                                    "collect_seed_pages": True,
+                                    "collect_patterns": ["faq"],
+                                }
+                            },
+                        }
+                    ],
+                    "source_blueprints": [
+                        {
+                            "name_suffix": "faq",
+                            "applies_to": ["portal"],
+                            "category": "faq",
+                            "seed_url_template": "{base_url}/faq-default",
+                            "collect_seed_pages": False,
+                            "collect_patterns": ["selectbbsnttview.do"],
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        sources = run_ingest.load_sources_config(config_path)
+
+        assert [source["name"] for source in sources] == ["example_department_faq"]
+        assert sources[0]["seed_urls"] == ["https://example.com/faq"]
+        assert sources[0]["collect_seed_pages"] is True
+        assert sources[0]["collect_patterns"] == ["faq"]
+    finally:
+        config_path.unlink(missing_ok=True)
