@@ -10,6 +10,8 @@ class ParseContext:
     department: Optional[str]
     allowed_keyword_filters: Optional[Tuple[str, ...]] = None
     blocked_keyword_filters: Optional[Tuple[str, ...]] = None
+    allowed_author_department_filters: Optional[Tuple[str, ...]] = None
+    blocked_author_department_filters: Optional[Tuple[str, ...]] = None
     parser_options: Dict[str, Any] = field(default_factory=dict)
 
 

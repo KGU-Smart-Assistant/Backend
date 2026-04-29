@@ -140,6 +140,16 @@ def build_crawler_config(source: Dict[str, Any]) -> Crawl4AICollectorConfig:
             if "blocked_keyword_filters" in source
             else None
         ),
+        allowed_author_department_filters=(
+            tuple(source["allowed_author_department_filters"])
+            if "allowed_author_department_filters" in source
+            else None
+        ),
+        blocked_author_department_filters=(
+            tuple(source["blocked_author_department_filters"])
+            if "blocked_author_department_filters" in source
+            else None
+        ),
         docling_config=DoclingCollectorConfig(
             category=source.get("category"),
             department=source.get("department"),

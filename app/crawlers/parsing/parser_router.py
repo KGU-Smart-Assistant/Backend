@@ -38,6 +38,8 @@ class ParserRouter:
                 department=context.department,
                 allowed_keyword_filters=context.allowed_keyword_filters,
                 blocked_keyword_filters=context.blocked_keyword_filters,
+                allowed_author_department_filters=context.allowed_author_department_filters,
+                blocked_author_department_filters=context.blocked_author_department_filters,
                 parser_options=dict(entry.get("options", {})),
             )
             parsed = self.parsers[parser_name].parse(result=result, context=parser_context)

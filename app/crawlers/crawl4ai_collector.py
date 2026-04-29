@@ -73,6 +73,8 @@ class Crawl4AICollectorConfig:
     collect_seed_pages: bool = True
     allowed_keyword_filters: Optional[Tuple[str, ...]] = None
     blocked_keyword_filters: Optional[Tuple[str, ...]] = None
+    allowed_author_department_filters: Optional[Tuple[str, ...]] = None
+    blocked_author_department_filters: Optional[Tuple[str, ...]] = None
     docling_config: DoclingCollectorConfig = field(default_factory=DoclingCollectorConfig)
 
 
@@ -140,6 +142,8 @@ async def _collect_documents_with_crawl4ai(
                     collected_at=collected_at,
                     allowed_keyword_filters=config.allowed_keyword_filters,
                     blocked_keyword_filters=config.blocked_keyword_filters,
+                    allowed_author_department_filters=config.allowed_author_department_filters,
+                    blocked_author_department_filters=config.blocked_author_department_filters,
                 )
                 if html_document is not None:
                     documents.append(html_document)
@@ -181,6 +185,8 @@ def _build_html_document(
     collected_at: datetime,
     allowed_keyword_filters: Optional[Tuple[str, ...]] = None,
     blocked_keyword_filters: Optional[Tuple[str, ...]] = None,
+    allowed_author_department_filters: Optional[Tuple[str, ...]] = None,
+    blocked_author_department_filters: Optional[Tuple[str, ...]] = None,
 ) -> Optional[Document]:
     parsed = PARSER_ROUTER.parse(
         result=result,
@@ -190,6 +196,8 @@ def _build_html_document(
             department=department,
             allowed_keyword_filters=allowed_keyword_filters,
             blocked_keyword_filters=blocked_keyword_filters,
+            allowed_author_department_filters=allowed_author_department_filters,
+            blocked_author_department_filters=blocked_author_department_filters,
         ),
     )
     if parsed is None:

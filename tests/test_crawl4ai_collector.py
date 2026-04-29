@@ -305,3 +305,36 @@ def test_build_html_document_applies_blocked_keyword_filters() -> None:
     )
 
     assert document is None
+
+
+def test_build_html_document_applies_allowed_author_department_filters() -> None:
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown=(
+                "2026 자유전공학부 신입생 오리엔테이션 자료\n"
+                "_작성자_ 자유전공학부교학팀\n"
+            )
+        ),
+        metadata={"title": "공지사항 - 자유전공학부"},
+        links={"internal": []},
+    )
+
+    accepted = _build_html_document(
+        url="https://example.com/selectBbsNttView.do?nttNo=6",
+        result=result,
+        category="notice",
+        department="open_major",
+        collected_at=datetime(2026, 4, 29, 12, 0, 0),
+        allowed_author_department_filters=("자유전공",),
+    )
+    rejected = _build_html_document(
+        url="https://example.com/selectBbsNttView.do?nttNo=7",
+        result=result,
+        category="notice",
+        department="open_major",
+        collected_at=datetime(2026, 4, 29, 12, 0, 0),
+        allowed_author_department_filters=("건강증진센터",),
+    )
+
+    assert accepted is not None
+    assert rejected is None

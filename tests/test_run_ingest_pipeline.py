@@ -195,8 +195,10 @@ def test_build_crawler_config_derives_allowed_path_prefixes_and_skip_images() ->
             "category": "notice",
             "department": "open_major_seoul",
             "skip_images": True,
+            "allowed_author_department_filters": ["자유전공"],
         }
     )
 
     assert config.allowed_path_prefixes == ("/open_major_Seoul/",)
     assert config.docling_config.skip_images is True
+    assert config.allowed_author_department_filters == ("자유전공",)

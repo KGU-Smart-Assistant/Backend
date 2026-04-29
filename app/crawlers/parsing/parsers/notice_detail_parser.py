@@ -74,6 +74,16 @@ class NoticeDetailParser(BaseParser):
             parsed, context.blocked_keyword_filters, context.department
         ):
             return None
+        if context.allowed_author_department_filters and not self._matches_author_department_filters(
+            parsed.author_department,
+            context.allowed_author_department_filters,
+        ):
+            return None
+        if context.blocked_author_department_filters and self._matches_author_department_filters(
+            parsed.author_department,
+            context.blocked_author_department_filters,
+        ):
+            return None
 
         return parsed
 
@@ -288,3 +298,16 @@ class NoticeDetailParser(BaseParser):
         candidates = (parsed.title, department, parsed.author_department)
         haystack = " ".join(self._normalize_text(str(value or "")) for value in candidates).casefold()
         return any(keyword in haystack for keyword in lowered_keywords)
+
+    def _matches_author_department_filters(
+        self,
+        author_department: Optional[str],
+        filters: tuple[str, ...],
+    ) -> bool:
+        lowered_filters = tuple(value.casefold() for value in filters if value)
+        if not lowered_filters:
+            return True
+        normalized_author_department = self._normalize_text(str(author_department or "")).casefold()
+        if not normalized_author_department:
+            return False
+        return any(value in normalized_author_department for value in lowered_filters)

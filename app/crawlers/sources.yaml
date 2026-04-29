@@ -239,6 +239,8 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/open_major/selectBbsNttList.do?key=9930&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "자유전공"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/open_major/selectBbsNttList.do?key=9931&bbsNo=684&selfAt=Y"
@@ -826,6 +828,8 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/open_major_Seoul/selectBbsNttList.do?key=10037&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "자유전공"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/open_major_Seoul/selectBbsNttList.do?key=10038&bbsNo=684&selfAt=Y"
