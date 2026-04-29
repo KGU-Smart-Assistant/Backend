@@ -1,14 +1,18 @@
 from app.crawlers.parsing.parser_registry import REGISTRY
+from app.crawlers.parsing.parsers.faq_parser import FaqParser
 from app.crawlers.parsing.parsers.generic_markdown_parser import GenericMarkdownParser
 from app.crawlers.parsing.parsers.notice_detail_parser import NoticeDetailParser
+from app.crawlers.parsing.parsers.schedule_parser import ScheduleParser
 from app.crawlers.parsing.schemas import ParseContext, ParsedDocument
 
 
 class ParserRouter:
     def __init__(self) -> None:
         self.parsers = {
+            "faq": FaqParser(),
             "notice_detail": NoticeDetailParser(),
             "generic_markdown": GenericMarkdownParser(),
+            "schedule": ScheduleParser(),
         }
 
     def parse(self, result, context: ParseContext) -> ParsedDocument | None:
