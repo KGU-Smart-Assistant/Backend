@@ -8,6 +8,8 @@ def test_load_registry_reads_yaml_templates() -> None:
 
     names = [entry["name"] for entry in registry]
 
+    assert "open_major_notice_detail" in names
+    assert "artificial_intelligence_notice_detail" in names
     assert "kyonggi_notice_detail" in names
     assert "kyonggi_faq_list" in names
     assert "kyonggi_schedule" in names
@@ -81,3 +83,12 @@ registry:
         first.unlink(missing_ok=True)
         second.unlink(missing_ok=True)
         templates_dir.rmdir()
+
+
+def test_site_specific_templates_rank_ahead_of_generic_kyonggi_entries() -> None:
+    registry = load_registry(Path("app/crawlers/parsing/templates"))
+    names = [entry["name"] for entry in registry]
+
+    assert names.index("open_major_notice_detail") < names.index("kyonggi_notice_detail")
+    assert names.index("artificial_intelligence_faq") < names.index("kyonggi_faq_list")
+    assert names.index("social_college_schedule") < names.index("kyonggi_schedule")
