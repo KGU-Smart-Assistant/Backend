@@ -269,6 +269,9 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/hcc/selectBbsNttList.do?key=788&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "인문대학"
+          - "인문"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/hcc/selectBbsNttList.do?key=800&bbsNo=684&selfAt=Y"
@@ -316,6 +319,9 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_english/selectBbsNttList.do?key=6667&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "영어영문학과"
+          - "영어영문"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_english/selectBbsNttList.do?key=6668&bbsNo=684&selfAt=Y"
@@ -439,6 +445,9 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_social/selectBbsNttList.do?key=7130&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "사회과학대학"
+          - "사회과학"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_social/selectBbsNttList.do?key=7131&bbsNo=684&selfAt=Y"
@@ -530,6 +539,9 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_swm/selectBbsNttList.do?key=10021&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "소프트웨어경영학부"
+          - "소프트웨어경영"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_swm/selectBbsNttList.do?key=10022&bbsNo=684&selfAt=Y"
@@ -581,6 +593,9 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_computer/selectBbsNttList.do?key=8824&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "컴퓨터공학"
+          - "AI컴퓨터공학부"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_computer/selectBbsNttList.do?key=2162&bbsNo=684&selfAt=Y"
@@ -620,6 +635,9 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_ai/selectBbsNttList.do?key=8825&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "인공지능전공"
+          - "AI컴퓨터공학부"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_ai/selectBbsNttList.do?key=2170&bbsNo=684&selfAt=Y"
@@ -658,6 +676,9 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/fsbt/selectBbsNttList.do?key=7358&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "융합과학대학"
+          - "융합과학"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/fsbt/selectBbsNttList.do?key=7359&bbsNo=684&selfAt=Y"
@@ -753,6 +774,9 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_tour/selectBbsNttList.do?key=7296&bbsNo=1073&selfAt=Y"
+        allowed_author_department_filters:
+          - "관광문화대학"
+          - "관광문화"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_tour/selectBbsNttList.do?key=7297&bbsNo=684&selfAt=Y"
