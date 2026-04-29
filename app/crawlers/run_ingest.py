@@ -189,6 +189,42 @@ def write_ingest_report(report: Dict[str, Any], output_dir: Path) -> Path:
     return report_path
 
 
+def classify_source_report(
+    *,
+    category: str | None,
+    raw_documents: int,
+    documents: int,
+    exact_duplicates_removed: int,
+    version_duplicates_removed: int,
+) -> Dict[str, str]:
+    if raw_documents == 0:
+        return {
+            "status": "no_content_discovered",
+            "reason": "No crawlable documents were discovered from the source.",
+        }
+
+    if documents == 0:
+        if exact_duplicates_removed or version_duplicates_removed:
+            return {
+                "status": "fully_deduplicated",
+                "reason": "Documents were discovered but removed as duplicates or older versions.",
+            }
+        if category == "faq":
+            return {
+                "status": "empty_board_or_filtered",
+                "reason": "FAQ board was empty or filtered out as a non-detail page.",
+            }
+        return {
+            "status": "filtered_out_or_empty",
+            "reason": "Documents were discovered but filtered out or reduced to zero usable items.",
+        }
+
+    return {
+        "status": "ok",
+        "reason": "Source produced usable documents.",
+    }
+
+
 def main() -> None:
     config_path = Path(__file__).resolve().with_name("sources.yaml")
 
@@ -201,6 +237,7 @@ def main() -> None:
     total_chunks = 0
     total_embedded_chunks = 0
     source_reports: List[Dict[str, Any]] = []
+    source_status_counts: Dict[str, int] = {}
 
     for source in sources:
         crawler_config = build_crawler_config(source)
@@ -220,6 +257,16 @@ def main() -> None:
         total_documents += len(documents)
         total_chunks += len(chunks)
 
+        source_summary = classify_source_report(
+            category=source.get("category"),
+            raw_documents=dedup_result.total_input,
+            documents=len(documents),
+            exact_duplicates_removed=dedup_result.exact_duplicates_removed,
+            version_duplicates_removed=dedup_result.version_duplicates_removed,
+        )
+        source_status_counts[source_summary["status"]] = (
+            source_status_counts.get(source_summary["status"], 0) + 1
+        )
         source_reports.append(
             {
                 "name": source["name"],
@@ -232,6 +279,8 @@ def main() -> None:
                 "version_duplicates_removed": dedup_result.version_duplicates_removed,
                 "chunks": len(chunks),
                 "embedded_chunks": embedded_count,
+                "status": source_summary["status"],
+                "status_reason": source_summary["reason"],
             }
         )
 
@@ -240,7 +289,8 @@ def main() -> None:
             f"documents={len(documents)} "
             f"exact_duplicates_removed={dedup_result.exact_duplicates_removed} "
             f"version_duplicates_removed={dedup_result.version_duplicates_removed} "
-            f"chunks={len(chunks)} embedded_chunks={embedded_count}"
+            f"chunks={len(chunks)} embedded_chunks={embedded_count} "
+            f"status={source_summary['status']}"
         )
 
     print(f"total_documents={total_documents}")
@@ -253,6 +303,7 @@ def main() -> None:
         "total_documents": total_documents,
         "total_chunks": total_chunks,
         "total_embedded_chunks": total_embedded_chunks,
+        "source_status_counts": source_status_counts,
         "sources": source_reports,
     }
     report_path = write_ingest_report(report, default_report_output_dir())

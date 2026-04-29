@@ -90,6 +90,7 @@ def test_run_ingest_executes_end_to_end_pipeline(monkeypatch, capsys) -> None:
     assert "exact_duplicates_removed=1" in captured.out
     assert "version_duplicates_removed=0" in captured.out
     assert "chunks=4 embedded_chunks=2" in captured.out
+    assert "status=ok" in captured.out
     assert "total_documents=2" in captured.out
     assert "total_chunks=4" in captured.out
     assert "total_embedded_chunks=2" in captured.out
@@ -113,14 +114,14 @@ def test_load_sources_config_expands_generated_sources() -> None:
                         }
                     ],
                     "source_blueprints": [
-                    {
-                        "name_suffix": "notice",
-                        "applies_to": ["portal"],
-                        "category": "notice",
-                        "seed_url_template": "{base_url}/notice",
-                        "follow_patterns": ["selectbbsnttlist.do", "selectbbsnttview.do"],
-                        "collect_patterns": ["selectbbsnttview.do"],
-                    }
+                        {
+                            "name_suffix": "notice",
+                            "applies_to": ["portal"],
+                            "category": "notice",
+                            "seed_url_template": "{base_url}/notice",
+                            "follow_patterns": ["selectbbsnttlist.do", "selectbbsnttview.do"],
+                            "collect_patterns": ["selectbbsnttview.do"],
+                        }
                     ],
                 },
                 ensure_ascii=False,
@@ -195,10 +196,44 @@ def test_build_crawler_config_derives_allowed_path_prefixes_and_skip_images() ->
             "category": "notice",
             "department": "open_major_seoul",
             "skip_images": True,
-            "allowed_author_department_filters": ["자유전공"],
+            "allowed_author_department_filters": ["?먯쑀?꾧났"],
         }
     )
 
     assert config.allowed_path_prefixes == ("/open_major_Seoul/",)
     assert config.docling_config.skip_images is True
-    assert config.allowed_author_department_filters == ("자유전공",)
+    assert config.allowed_author_department_filters == ("?먯쑀?꾧났",)
+
+
+def test_classify_source_report_statuses() -> None:
+    assert run_ingest.classify_source_report(
+        category="notice",
+        raw_documents=0,
+        documents=0,
+        exact_duplicates_removed=0,
+        version_duplicates_removed=0,
+    )["status"] == "no_content_discovered"
+
+    assert run_ingest.classify_source_report(
+        category="faq",
+        raw_documents=2,
+        documents=0,
+        exact_duplicates_removed=0,
+        version_duplicates_removed=0,
+    )["status"] == "empty_board_or_filtered"
+
+    assert run_ingest.classify_source_report(
+        category="materials",
+        raw_documents=3,
+        documents=0,
+        exact_duplicates_removed=1,
+        version_duplicates_removed=1,
+    )["status"] == "fully_deduplicated"
+
+    assert run_ingest.classify_source_report(
+        category="notice",
+        raw_documents=3,
+        documents=2,
+        exact_duplicates_removed=0,
+        version_duplicates_removed=0,
+    )["status"] == "ok"
