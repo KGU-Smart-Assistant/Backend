@@ -23,6 +23,7 @@ def test_load_registry_normalizes_patterns_to_tuples() -> None:
             """
 registry:
   - name: custom_notice
+    priority: 5
     url_patterns:
       - "notice"
     categories:
@@ -40,8 +41,43 @@ registry:
                 "url_patterns": ("notice",),
                 "categories": ("notice",),
                 "parser": "notice_detail",
+                "priority": 5,
             }
         ]
     finally:
         template_path.unlink(missing_ok=True)
+        templates_dir.rmdir()
+
+
+def test_load_registry_sorts_by_priority() -> None:
+    templates_dir = Path(".tmp/parser-registry-priority-test")
+    templates_dir.mkdir(parents=True, exist_ok=True)
+    first = templates_dir / "b.yaml"
+    second = templates_dir / "a.yaml"
+    try:
+        first.write_text(
+            """
+registry:
+  - name: later_parser
+    priority: 50
+    parser: generic_markdown
+""".strip(),
+            encoding="utf-8",
+        )
+        second.write_text(
+            """
+registry:
+  - name: earlier_parser
+    priority: 10
+    parser: notice_detail
+""".strip(),
+            encoding="utf-8",
+        )
+
+        registry = load_registry(templates_dir)
+
+        assert [entry["name"] for entry in registry] == ["earlier_parser", "later_parser"]
+    finally:
+        first.unlink(missing_ok=True)
+        second.unlink(missing_ok=True)
         templates_dir.rmdir()
