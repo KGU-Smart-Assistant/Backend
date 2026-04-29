@@ -30,6 +30,7 @@ def load_registry(templates_dir: Path | None = None) -> List[Dict[str, Any]]:
                     "categories": tuple(entry.get("categories", [])),
                     "parser": entry["parser"],
                     "priority": int(entry.get("priority", 100)),
+                    "options": dict(entry.get("options", {})),
                 }
             )
 

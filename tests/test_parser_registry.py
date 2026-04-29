@@ -44,6 +44,7 @@ registry:
                 "categories": ("notice",),
                 "parser": "notice_detail",
                 "priority": 5,
+                "options": {},
             }
         ]
     finally:
@@ -92,3 +93,12 @@ def test_site_specific_templates_rank_ahead_of_generic_kyonggi_entries() -> None
     assert names.index("open_major_notice_detail") < names.index("kyonggi_notice_detail")
     assert names.index("artificial_intelligence_faq") < names.index("kyonggi_faq_list")
     assert names.index("social_college_schedule") < names.index("kyonggi_schedule")
+
+
+def test_site_specific_template_options_are_loaded() -> None:
+    registry = load_registry(Path("app/crawlers/parsing/templates"))
+    tourism_notice = next(
+        entry for entry in registry if entry["name"] == "tourism_culture_college_notice_detail"
+    )
+
+    assert tourism_notice["options"] == {"blocked_title_prefixes": ["* 경기대학교"]}

@@ -32,7 +32,15 @@ class ParserRouter:
             if entry["name"] != "generic_markdown":
                 matched_specific_parser = True
 
-            parsed = self.parsers[parser_name].parse(result=result, context=context)
+            parser_context = ParseContext(
+                url=context.url,
+                category=context.category,
+                department=context.department,
+                allowed_keyword_filters=context.allowed_keyword_filters,
+                blocked_keyword_filters=context.blocked_keyword_filters,
+                parser_options=dict(entry.get("options", {})),
+            )
+            parsed = self.parsers[parser_name].parse(result=result, context=parser_context)
             if parsed is not None:
                 return parsed
             if matched_specific_parser:

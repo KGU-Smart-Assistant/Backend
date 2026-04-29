@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -10,6 +10,7 @@ class ParseContext:
     department: Optional[str]
     allowed_keyword_filters: Optional[Tuple[str, ...]] = None
     blocked_keyword_filters: Optional[Tuple[str, ...]] = None
+    parser_options: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

@@ -45,8 +45,13 @@ class NoticeDetailParser(BaseParser):
         title = self._extract_title_from_crawl_result(result, content)
         if title:
             title = self._sanitize_extracted_title(title)
-        if not title or title == "본문 바로가기" or self._looks_like_metadata_title(title):
-            title = self._extract_fallback_title_from_content(content)
+        if (
+            not title
+            or title == "본문 바로가기"
+            or self._looks_like_metadata_title(title)
+            or self._matches_blocked_title_prefix(title, context)
+        ):
+            title = self._extract_fallback_title_from_content(content, context)
         if not title:
             return None
 
@@ -223,7 +228,11 @@ class NoticeDetailParser(BaseParser):
         normalized = re.sub(r"\]\(https?://[^)]+\)", "", normalized)
         return normalized.strip()
 
-    def _extract_fallback_title_from_content(self, content: str) -> Optional[str]:
+    def _extract_fallback_title_from_content(
+        self,
+        content: str,
+        context: ParseContext,
+    ) -> Optional[str]:
         for line in content.splitlines():
             stripped = line.strip()
             if not stripped or stripped.startswith("![") or stripped.startswith("["):
@@ -234,6 +243,7 @@ class NoticeDetailParser(BaseParser):
                 or normalized == "본문 바로가기"
                 or self._should_skip_title(normalized)
                 or self._looks_like_metadata_title(normalized)
+                or self._matches_blocked_title_prefix(normalized, context)
             ):
                 continue
             return normalized[:300]
@@ -250,6 +260,11 @@ class NoticeDetailParser(BaseParser):
     def _looks_like_metadata_title(self, value: str) -> bool:
         normalized = self._normalize_text(value)
         return any(normalized.startswith(prefix) for prefix in METADATA_TITLE_PREFIXES)
+
+    def _matches_blocked_title_prefix(self, value: str, context: ParseContext) -> bool:
+        normalized = self._normalize_text(value)
+        blocked_prefixes = context.parser_options.get("blocked_title_prefixes", [])
+        return any(normalized.startswith(prefix) for prefix in blocked_prefixes)
 
     def _looks_like_metadata_label(self, value: str) -> bool:
         lowered = value.lower()

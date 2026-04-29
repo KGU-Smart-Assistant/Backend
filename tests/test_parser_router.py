@@ -41,3 +41,26 @@ def test_parser_router_uses_schedule_parser_for_schedule_category() -> None:
 
     assert parsed is not None
     assert parsed.title == "학사일정 - 예시학과"
+
+
+def test_parser_router_applies_site_specific_parser_options() -> None:
+    router = ParserRouter()
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown="* 경기대학교\n2025학년도 협력병원 건강검진 안내드립니다."
+        ),
+        metadata={"title": "* 경기대학교"},
+        links={"internal": []},
+    )
+
+    parsed = router.parse(
+        result=result,
+        context=ParseContext(
+            url="https://www.kyonggi.ac.kr/u_tour/selectBbsNttView.do?bbsNo=684&nttNo=1",
+            category="materials",
+            department="tourism_culture_college",
+        ),
+    )
+
+    assert parsed is not None
+    assert parsed.title == "2025학년도 협력병원 건강검진 안내드립니다."

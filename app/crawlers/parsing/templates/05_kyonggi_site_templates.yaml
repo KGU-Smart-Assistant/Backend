@@ -182,6 +182,9 @@ registry:
       - "notice"
       - "materials"
     parser: notice_detail
+    options:
+      blocked_title_prefixes:
+        - "* 경기대학교"
 
   - name: tourism_culture_college_faq
     priority: 5
