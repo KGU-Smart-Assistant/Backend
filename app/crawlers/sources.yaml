@@ -3,6 +3,7 @@ defaults:
     category: notice
     max_pages: 8
     max_depth: 2
+    skip_images: true
     follow_patterns:
       - "bbsno=1073"
       - "bbsno=549"

@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 from datetime import datetime
 from typing import Any, Dict, List
+from urllib.parse import urlparse
 
 import yaml
 
@@ -106,8 +107,13 @@ def _expand_generated_sources(
 
 
 def build_crawler_config(source: Dict[str, Any]) -> Crawl4AICollectorConfig:
+    seed_urls = source["seed_urls"]
+    allowed_path_prefixes = source.get("allowed_path_prefixes")
+    if allowed_path_prefixes is None:
+        allowed_path_prefixes = _derive_allowed_path_prefixes(seed_urls)
+
     return Crawl4AICollectorConfig(
-        seed_urls=source["seed_urls"],
+        seed_urls=seed_urls,
         max_pages=source.get("max_pages", 20),
         max_depth=source.get("max_depth", 2),
         category=source.get("category"),
@@ -120,6 +126,9 @@ def build_crawler_config(source: Dict[str, Any]) -> Crawl4AICollectorConfig:
             tuple(source["collect_patterns"]) if "collect_patterns" in source else None
         ),
         exclude_patterns=tuple(source.get("exclude_patterns", DEFAULT_EXCLUDE_PATTERNS)),
+        allowed_path_prefixes=(
+            tuple(allowed_path_prefixes) if allowed_path_prefixes is not None else None
+        ),
         collect_seed_pages=source.get("collect_seed_pages", True),
         allowed_keyword_filters=(
             tuple(source["allowed_keyword_filters"])
@@ -138,6 +147,21 @@ def build_crawler_config(source: Dict[str, Any]) -> Crawl4AICollectorConfig:
             skip_images=source.get("skip_images", False),
         ),
     )
+
+
+def _derive_allowed_path_prefixes(seed_urls: List[str]) -> List[str]:
+    prefixes: List[str] = []
+    for seed_url in seed_urls:
+        parsed = urlparse(seed_url)
+        path = parsed.path or "/"
+        if path == "/":
+            prefix = "/"
+        else:
+            first_segment = path.strip("/").split("/", 1)[0]
+            prefix = f"/{first_segment}/" if first_segment else "/"
+        if prefix not in prefixes:
+            prefixes.append(prefix)
+    return prefixes
 
 
 def default_report_output_dir() -> Path:

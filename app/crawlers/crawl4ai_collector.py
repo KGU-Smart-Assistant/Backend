@@ -66,6 +66,7 @@ class Crawl4AICollectorConfig:
     collect_patterns: Optional[Tuple[str, ...]] = None
     exclude_patterns: Tuple[str, ...] = DEFAULT_EXCLUDE_PATTERNS
     allowed_domains: Optional[Set[str]] = None
+    allowed_path_prefixes: Optional[Tuple[str, ...]] = None
     headless: bool = True
     word_count_threshold: int = 1
     page_timeout_ms: int = 30000
@@ -286,6 +287,11 @@ def _is_allowed_url(
 
     if _looks_like_document_url(url):
         return True
+
+    if config.allowed_path_prefixes:
+        normalized_path = parsed.path if parsed.path.endswith("/") else f"{parsed.path}/"
+        if not any(normalized_path.startswith(prefix) for prefix in config.allowed_path_prefixes):
+            return False
 
     patterns = config.follow_patterns or config.include_patterns
     if not patterns:

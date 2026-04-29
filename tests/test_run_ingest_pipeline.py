@@ -186,3 +186,17 @@ def test_load_sources_config_applies_site_source_overrides() -> None:
         assert sources[0]["collect_patterns"] == ["faq"]
     finally:
         config_path.unlink(missing_ok=True)
+
+
+def test_build_crawler_config_derives_allowed_path_prefixes_and_skip_images() -> None:
+    config = run_ingest.build_crawler_config(
+        {
+            "seed_urls": ["https://www.kyonggi.ac.kr/open_major_Seoul/selectBbsNttList.do?key=1"],
+            "category": "notice",
+            "department": "open_major_seoul",
+            "skip_images": True,
+        }
+    )
+
+    assert config.allowed_path_prefixes == ("/open_major_Seoul/",)
+    assert config.docling_config.skip_images is True

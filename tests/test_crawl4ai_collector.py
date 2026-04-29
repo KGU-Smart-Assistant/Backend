@@ -69,10 +69,30 @@ def test_is_allowed_url_uses_follow_patterns_for_html() -> None:
     )
 
 
+def test_is_allowed_url_restricts_html_to_allowed_path_prefixes() -> None:
+    config = Crawl4AICollectorConfig(
+        seed_urls=["https://example.com/open_major/index.do"],
+        follow_patterns=("selectbbsnttview.do",),
+        allowed_path_prefixes=("/open_major/",),
+    )
+
+    assert _is_allowed_url(
+        "https://example.com/open_major/selectBbsNttView.do?bbsNo=1&nttNo=2",
+        allowed_domains={"example.com"},
+        config=config,
+    )
+    assert not _is_allowed_url(
+        "https://example.com/www/selectBbsNttView.do?bbsNo=1073&nttNo=9",
+        allowed_domains={"example.com"},
+        config=config,
+    )
+
+
 def test_is_allowed_url_still_allows_document_links() -> None:
     config = Crawl4AICollectorConfig(
         seed_urls=["https://example.com/board"],
         follow_patterns=("selectbbsnttlist.do",),
+        allowed_path_prefixes=("/board/",),
     )
 
     assert _is_allowed_url(
