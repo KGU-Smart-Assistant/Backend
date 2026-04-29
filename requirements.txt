@@ -31,4 +31,11 @@ pydantic-settings
 
 #genai SDK
 google-genai
+
+# DB ORM
+SQLAlchemy
+psycopg2-binary
+asyncpg
+# SQLite/SQLAlchemy helpers (optional but common)
+# aiosqlite
 PyYAML
