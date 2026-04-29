@@ -237,10 +237,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/open_major/selectBbsNttList.do?key=9930&bbsNo=1073&sf.dc=18M02&sf.dcof=of1&sf.of1=M"
+          - "https://www.kyonggi.ac.kr/open_major/selectBbsNttList.do?key=9930&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/open_major/selectBbsNttList.do?key=9931&bbsNo=684&sf.dc=18M02&sf.dcof=of2&sf.of2=M"
+          - "https://www.kyonggi.ac.kr/open_major/selectBbsNttList.do?key=9931&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "자유전공"
           - "전공설계융합"
@@ -265,10 +265,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/hcc/selectBbsNttList.do?key=788&bbsNo=1073&sf.dc=18102&sf.dcof=of1&sf.of1=C"
+          - "https://www.kyonggi.ac.kr/hcc/selectBbsNttList.do?key=788&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/hcc/selectBbsNttList.do?key=800&bbsNo=684&sf.dc=18102&sf.dcof=of2&sf.of2=C"
+          - "https://www.kyonggi.ac.kr/hcc/selectBbsNttList.do?key=800&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "인문대학"
           - "인문"
@@ -312,10 +312,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_english/selectBbsNttList.do?key=6667&bbsNo=1073&sf.dc=80102&sf.dcof=of1&sf.of1=M"
+          - "https://www.kyonggi.ac.kr/u_english/selectBbsNttList.do?key=6667&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_english/selectBbsNttList.do?key=6668&bbsNo=684&sf.dc=80102&sf.dcof=of2&sf.of2=M"
+          - "https://www.kyonggi.ac.kr/u_english/selectBbsNttList.do?key=6668&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "영어영문"
           - "영문"
@@ -435,10 +435,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_social/selectBbsNttList.do?key=7130&bbsNo=1073&sf.dc=18K00&sf.dcof=of1&sf.of1=C"
+          - "https://www.kyonggi.ac.kr/u_social/selectBbsNttList.do?key=7130&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_social/selectBbsNttList.do?key=7131&bbsNo=684&sf.dc=18K00&sf.dcof=of2&sf.of2=C"
+          - "https://www.kyonggi.ac.kr/u_social/selectBbsNttList.do?key=7131&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "사회과학"
           - "사회과학대학"
@@ -526,10 +526,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_swm/selectBbsNttList.do?key=10021&bbsNo=1073&sf.dc=T1455&sf.dcof=of1&sf.of1=M"
+          - "https://www.kyonggi.ac.kr/u_swm/selectBbsNttList.do?key=10021&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_swm/selectBbsNttList.do?key=10022&bbsNo=684&sf.dc=T1455&sf.dcof=of2&sf.of2=M"
+          - "https://www.kyonggi.ac.kr/u_swm/selectBbsNttList.do?key=10022&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "소프트웨어경영"
           - "소프트웨어경영학부"
@@ -577,10 +577,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_computer/selectBbsNttList.do?key=8824&bbsNo=1073&sf.dc=85511&sf.dcof=of1&sf.of1=M"
+          - "https://www.kyonggi.ac.kr/u_computer/selectBbsNttList.do?key=8824&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_computer/selectBbsNttList.do?key=2162&bbsNo=684&sf.dc=85511&sf.dcof=of2&sf.of2=M"
+          - "https://www.kyonggi.ac.kr/u_computer/selectBbsNttList.do?key=2162&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "컴퓨터공학"
           - "AI컴퓨터공학부"
@@ -616,10 +616,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_ai/selectBbsNttList.do?key=8825&bbsNo=1073&sf.dc=85512&sf.dcof=of1&sf.of1=M"
+          - "https://www.kyonggi.ac.kr/u_ai/selectBbsNttList.do?key=8825&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_ai/selectBbsNttList.do?key=2170&bbsNo=684&sf.dc=85512&sf.dcof=of2&sf.of2=M"
+          - "https://www.kyonggi.ac.kr/u_ai/selectBbsNttList.do?key=2170&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "인공지능"
           - "ai컴퓨터공학부"
@@ -654,10 +654,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/fsbt/selectBbsNttList.do?key=7358&bbsNo=1073&sf.dc=18E70&sf.dcof=of1&sf.of1=C"
+          - "https://www.kyonggi.ac.kr/fsbt/selectBbsNttList.do?key=7358&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/fsbt/selectBbsNttList.do?key=7359&bbsNo=684&sf.dc=18E70&sf.dcof=of2&sf.of2=C"
+          - "https://www.kyonggi.ac.kr/fsbt/selectBbsNttList.do?key=7359&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "융합과학"
           - "융합과학대학"
@@ -749,10 +749,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_tour/selectBbsNttList.do?key=7296&bbsNo=1073&sf.dc=A4460&sf.dcof=of1&sf.of1=C"
+          - "https://www.kyonggi.ac.kr/u_tour/selectBbsNttList.do?key=7296&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/u_tour/selectBbsNttList.do?key=7297&bbsNo=684&sf.dc=A4460&sf.dcof=of2&sf.of2=C"
+          - "https://www.kyonggi.ac.kr/u_tour/selectBbsNttList.do?key=7297&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "관광문화"
           - "관광문화대학"
@@ -824,10 +824,10 @@ department_sites:
     source_overrides:
       notice:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/open_major_Seoul/selectBbsNttList.do?key=10037&bbsNo=1073&sf.dc=T4460&sf.dcof=of1&sf.of1=M"
+          - "https://www.kyonggi.ac.kr/open_major_Seoul/selectBbsNttList.do?key=10037&bbsNo=1073&selfAt=Y"
       materials:
         seed_urls:
-          - "https://www.kyonggi.ac.kr/open_major_Seoul/selectBbsNttList.do?key=10038&bbsNo=684&sf.dc=T4460&sf.dcof=of2&sf.of2=M"
+          - "https://www.kyonggi.ac.kr/open_major_Seoul/selectBbsNttList.do?key=10038&bbsNo=684&selfAt=Y"
         allowed_keyword_filters:
           - "자유전공"
           - "전공설계융합"
