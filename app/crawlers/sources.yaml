@@ -339,6 +339,36 @@ department_sites:
     department: korean_language_literature
     base_url: "http://kyonggi.ac.kr/gm/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/gm/selectBbsNttList.do?key=3538&bbsNo=1073&sf.dc=80101&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "국어국문학과"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/gm/selectBbsNttList.do?key=3539&bbsNo=684&sf.dc=80101&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "국어국문학과"
+          - "국어국문"
+          - "문예창작"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/gm/selectBbsNttList.do?key=3540&bbsNo=916"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=916"
+          - "faq"
+        collect_patterns:
+          - "bbsno=916"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/gm/selectTnSchafsSchdulListUS.do?key=9004&sc1=10&sa1=gm"
+        collect_seed_pages: true
   - slug: english
     department: english
     base_url: "https://www.kyonggi.ac.kr/u_english/index.do"
