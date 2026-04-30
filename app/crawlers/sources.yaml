@@ -665,42 +665,352 @@ department_sites:
     department: arts_sports_college
     base_url: "https://www.kyonggi.ac.kr/phyedu/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/phyedu/selectBbsNttList.do?key=7323&bbsNo=1073&sf.dc=18J00&sf.dcof=of1&sf.of1=C&selfAt=Y"
+        allowed_author_department_filters:
+          - "예술체육대학"
+          - "예술체육"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/phyedu/selectBbsNttList.do?key=7324&bbsNo=684&sf.dc=18J00&sf.dcof=of2&sf.of2=C&selfAt=Y"
+        allowed_keyword_filters:
+          - "예술체육대학"
+          - "예술체육"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/phyedu/selectBbsNttList.do?key=7325&bbsNo=925"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=925"
+          - "faq"
+        collect_patterns:
+          - "bbsno=925"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/phyedu/selectTnSchafsSchdulListUS.do?key=9015&sc1=10&sa1=phyedu"
+        collect_seed_pages: true
   - slug: dimensional_art
     department: dimensional_art
     base_url: "https://www.kyonggi.ac.kr/3Dimensional_Art/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/3Dimensional_Art/selectBbsNttList.do?key=2344&bbsNo=1073&sf.dc=81049&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "입체조형학과"
+          - "입체조형"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/3Dimensional_Art/selectBbsNttList.do?key=2345&bbsNo=684&sf.dc=81049&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "입체조형학과"
+          - "입체조형"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/3Dimensional_Art/selectBbsNttList.do?key=2346&bbsNo=927"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=927"
+          - "faq"
+        collect_patterns:
+          - "bbsno=927"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/3Dimensional_Art/selectTnSchafsSchdulListUS.do?key=9017&sc1=10&sa1=3Dimensional_Art"
+        collect_seed_pages: true
   - slug: physical_education_department
     department: physical_education_department
     base_url: "https://www.kyonggi.ac.kr/pe/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/pe/selectBbsNttList.do?key=2331&bbsNo=1073&sf.dc=80701&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "체육학과"
+          - "체육"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/pe/selectBbsNttList.do?key=2332&bbsNo=684&sf.dc=80701&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "체육학과"
+          - "체육"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/pe/selectBbsNttList.do?key=2333&bbsNo=926"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=926"
+          - "faq"
+        collect_patterns:
+          - "bbsno=926"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/pe/selectTnSchafsSchdulListUS.do?key=9016&sc1=10&sa1=pe"
+        collect_seed_pages: true
   - slug: security_management
     department: security_management
     base_url: "https://www.kyonggi.ac.kr/SM/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/SM/selectBbsNttList.do?key=2359&bbsNo=1073&sf.dc=81039&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "경호보안학과"
+          - "경호보안"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/SM/selectBbsNttList.do?key=2360&bbsNo=684&sf.dc=81039&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "경호보안학과"
+          - "경호보안"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/SM/selectBbsNttList.do?key=2361&bbsNo=928"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=928"
+          - "faq"
+        collect_patterns:
+          - "bbsno=928"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/SM/selectTnSchafsSchdulListUS.do?key=9020&sc1=10&sa1=SM"
+        collect_seed_pages: true
   - slug: visual_communication_design
     department: visual_communication_design
     base_url: "https://www.kyonggi.ac.kr/VCD/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/VCD/selectBbsNttList.do?key=7252&bbsNo=1073&sf.dc=81051&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "시각정보디자인전공"
+          - "시각정보디자인"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/VCD/selectBbsNttList.do?key=7253&bbsNo=684&sf.dc=81051&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "시각정보디자인전공"
+          - "시각정보디자인"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/VCD/selectBbsNttList.do?key=7254&bbsNo=658"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=658"
+          - "faq"
+        collect_patterns:
+          - "bbsno=658"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/VCD/selectTnSchafsSchdulListUS.do?key=9021&sc1=10&sa1=VCD"
+        collect_seed_pages: true
   - slug: industrial_design
     department: industrial_design
     base_url: "https://www.kyonggi.ac.kr/ID/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/ID/selectBbsNttList.do?key=7267&bbsNo=1073&sf.dc=81050&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "산업디자인전공"
+          - "산업디자인"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/ID/selectBbsNttList.do?key=7268&bbsNo=684&sf.dc=81050&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "산업디자인전공"
+          - "산업디자인"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/ID/selectBbsNttList.do?key=7269&bbsNo=387"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=387"
+          - "faq"
+        collect_patterns:
+          - "bbsno=387"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/ID/selectTnSchafsSchdulListUS.do?key=9022&sc1=10&sa1=ID"
+        collect_seed_pages: true
   - slug: living_jewelry_design
     department: living_jewelry_design
     base_url: "https://www.kyonggi.ac.kr/JMD/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/JMD/selectBbsNttList.do?key=2410&bbsNo=1073&sf.dc=81052&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "리빙주얼리디자인전공"
+          - "주얼리"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/JMD/selectBbsNttList.do?key=2411&bbsNo=684&sf.dc=81052&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "리빙"
+          - "주얼리"
+          - "리빙주얼리디자인전공"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/JMD/selectBbsNttList.do?key=2412&bbsNo=929"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=929"
+          - "faq"
+        collect_patterns:
+          - "bbsno=929"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/JMD/selectTnSchafsSchdulListUS.do?key=9023&sc1=10&sa1=JMD"
+        collect_seed_pages: true
   - slug: korean_painting
     department: korean_painting
     base_url: "https://www.kyonggi.ac.kr/KoreanPainting/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/KoreanPainting/selectBbsNttList.do?key=2423&bbsNo=1073&sf.dc=85601&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "한국화전공"
+          - "한국화"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/KoreanPainting/selectBbsNttList.do?key=2424&bbsNo=684&sf.dc=85601&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "한국화전공"
+          - "한국화"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/KoreanPainting/selectBbsNttList.do?key=2425&bbsNo=930"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=930"
+          - "faq"
+        collect_patterns:
+          - "bbsno=930"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/KoreanPainting/selectTnSchafsSchdulListUS.do?key=9024&sc1=10&sa1=KoreanPainting"
+        collect_seed_pages: true
   - slug: western_painting
     department: western_painting
     base_url: "https://www.kyonggi.ac.kr/u_western/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_western/selectBbsNttList.do?key=6759&bbsNo=1073&sf.dc=85602&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "서양화전공"
+          - "서양화"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_western/selectBbsNttList.do?key=6760&bbsNo=684&sf.dc=85602&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "서양화전공"
+          - "서양화"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_western/selectBbsNttList.do?key=6761&bbsNo=931"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=931"
+          - "faq"
+        collect_patterns:
+          - "bbsno=931"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_western/selectTnSchafsSchdulListUS.do?key=9025&sc1=10&sa1=u_western"
+        collect_seed_pages: true
   - slug: art_management
     department: art_management
     base_url: "https://www.kyonggi.ac.kr/am/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/am/selectBbsNttList.do?key=6769&bbsNo=1073&sf.dc=85603&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "미술경영전공"
+          - "미술경영"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/am/selectBbsNttList.do?key=6770&bbsNo=684&sf.dc=85603&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "미술경영전공"
+          - "미술경영"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/am/selectBbsNttList.do?key=6771&bbsNo=932"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=932"
+          - "faq"
+        collect_patterns:
+          - "bbsno=932"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/am/selectTnSchafsSchdulListUS.do?key=9026&sc1=10&sa1=am"
+        collect_seed_pages: true
   - slug: calligraphy
     department: calligraphy
     base_url: "https://www.kyonggi.ac.kr/calligraphy/index.do"
