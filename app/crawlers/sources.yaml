@@ -1407,26 +1407,212 @@ department_sites:
     department: youth_studies
     base_url: "https://www.kyonggi.ac.kr/miys/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/miys/selectBbsNttList.do?key=6978&bbsNo=1073&sf.dc=85314&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "청소년학전공"
+          - "청소년학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/miys/selectBbsNttList.do?key=6979&bbsNo=684&sf.dc=85314&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "청소년학전공"
+          - "청소년학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/miys/selectBbsNttList.do?key=6980&bbsNo=941"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=941"
+          - "faq"
+        collect_patterns:
+          - "bbsno=941"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/miys/selectTnSchafsSchdulListUS.do?key=9035&sc1=10&sa1=miys"
+        collect_seed_pages: true
   - slug: political_science_diplomacy
     department: political_science_diplomacy
     base_url: "https://www.kyonggi.ac.kr/psd/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/psd/selectBbsNttList.do?key=7312&bbsNo=1073&sf.dc=85322&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "정치외교학전공"
+          - "정치외교"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/psd/selectBbsNttList.do?key=7313&bbsNo=684&sf.dc=85322&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "정치외교학전공"
+          - "정치외교"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/psd/selectBbsNttList.do?key=7314&bbsNo=943"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=943"
+          - "faq"
+        collect_patterns:
+          - "bbsno=943"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/psd/selectTnSchafsSchdulListUS.do?key=9037&sc1=10&sa1=psd"
+        collect_seed_pages: true
   - slug: economics
     department: economics
     base_url: "https://www.kyonggi.ac.kr/u_economics/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_economics/selectBbsNttList.do?key=2035&bbsNo=1073&sf.dc=85331&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "경제학전공"
+          - "경제학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_economics/selectBbsNttList.do?key=2036&bbsNo=684&sf.dc=85331&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "경제학전공"
+          - "경제학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_economics/selectBbsNttList.do?key=2037&bbsNo=944"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=944"
+          - "faq"
+        collect_patterns:
+          - "bbsno=944"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_economics/selectTnSchafsSchdulListUS.do?key=9038&sc1=10&sa1=u_economics"
+        collect_seed_pages: true
   - slug: applied_statistics
     department: applied_statistics
     base_url: "https://www.kyonggi.ac.kr/u_tattistics/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_tattistics/selectBbsNttList.do?key=2065&bbsNo=1073&sf.dc=85333&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "응용통계학전공"
+          - "응용통계"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_tattistics/selectBbsNttList.do?key=2066&bbsNo=684&sf.dc=85333&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "응용통계학전공"
+          - "응용통계"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_tattistics/selectBbsNttList.do?key=2067&bbsNo=946"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=946"
+          - "faq"
+        collect_patterns:
+          - "bbsno=946"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_tattistics/selectTnSchafsSchdulListUS.do?key=9040&sc1=10&sa1=u_tattistics"
+        collect_seed_pages: true
   - slug: intellectual_property
     department: intellectual_property
     base_url: "https://www.kyonggi.ac.kr/u_property/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_property/selectBbsNttList.do?key=2080&bbsNo=1073&sf.dc=85334&sf.dcof=of1&sf.of1=K010608&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "지식재산학전공"
+          - "지식재산"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_property/selectBbsNttList.do?key=2081&bbsNo=684&sf.dc=85334&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "지식재산학전공"
+          - "지식재산"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_property/selectBbsNttList.do?key=2082&bbsNo=947"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=947"
+          - "faq"
+        collect_patterns:
+          - "bbsno=947"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_property/selectTnSchafsSchdulListUS.do?key=9041&sc1=10&sa1=u_property"
+        collect_seed_pages: true
   - slug: software_management_college
     department: software_management_college
     base_url: "https://www.kyonggi.ac.kr/u_softmanage/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_softmanage/selectBbsNttList.do?key=7118&bbsNo=1073&sf.dc=A1455&sf.dcof=of1&sf.of1=C&selfAt=Y"
+        allowed_author_department_filters:
+          - "소프트웨어경영대학"
+          - "소프트웨어경영"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_softmanage/selectBbsNttList.do?key=7119&bbsNo=684&sf.dc=A1455&sf.dcof=of2&sf.of2=C&selfAt=Y"
+        allowed_keyword_filters:
+          - "소프트웨어경영대학"
+          - "소프트웨어경영"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_softmanage/selectBbsNttList.do?key=7120&bbsNo=948"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=948"
+          - "faq"
+        collect_patterns:
+          - "bbsno=948"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_softmanage/selectTnSchafsSchdulListUS.do?key=9042&sc1=10&sa1=u_softmanage"
+        collect_seed_pages: true
   - slug: software_management
     department: software_management
     base_url: "https://www.kyonggi.ac.kr/u_swm/index.do"
@@ -1473,14 +1659,97 @@ department_sites:
     department: business
     base_url: "https://www.kyonggi.ac.kr/u_business/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_business/selectBbsNttList.do?key=3304&bbsNo=557&sf.dc=85531&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "경영학전공"
+          - "경영학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_business/selectBbsNttList.do?key=3305&bbsNo=558&sf.dc=85531&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "경영학전공"
+          - "경영학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_business/selectBbsNttList.do?key=3306&bbsNo=952"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=952"
+          - "faq"
+        collect_patterns:
+          - "bbsno=952"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_business/selectTnSchafsSchdulListUS.do?key=9046&sc1=10&sa1=u_business"
+        collect_seed_pages: true
   - slug: accounting_tax
     department: accounting_tax
     base_url: "https://www.kyonggi.ac.kr/u_accounting/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_accounting/selectBbsNttList.do?key=2253&bbsNo=1073&sf.dc=85532&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "회계세무학전공"
+          - "회계세무"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_accounting/selectBbsNttList.do?key=2254&bbsNo=684&sf.dc=85532&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "회계세무학전공"
+          - "회계세무"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_accounting/selectBbsNttList.do?key=2255&bbsNo=953"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=953"
+          - "faq"
+        collect_patterns:
+          - "bbsno=953"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_accounting/selectTnSchafsSchdulListUS.do?key=9047&sc1=10&sa1=u_accounting"
+        collect_seed_pages: true
   - slug: industrial_management_engineering
     department: industrial_management_engineering
     base_url: "https://www.kyonggi.ac.kr/u-industrial/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u-industrial/selectBbsNttList.do?key=7510&bbsNo=1073&sf.dc=85020&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "산업경영공학과"
+          - "산업경영공학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u-industrial/selectBbsNttList.do?key=2207&bbsNo=684&sf.dc=85020&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "산업경영공학과"
+          - "산업경영공학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u-industrial/selectTnSchafsSchdulListUS.do?key=9304&sc1=10&sa1=u-industrial"
+        collect_seed_pages: true
   - slug: computer_engineering
     department: computer_engineering
     base_url: "https://www.kyonggi.ac.kr/u_computer/index.do"
@@ -1560,6 +1829,37 @@ department_sites:
     department: software_security
     base_url: "https://www.kyonggi.ac.kr/u_security/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_security/selectBbsNttList.do?key=8826&bbsNo=1073&sf.dc=85513&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "sw안전보안전공"
+          - "안전보안"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_security/selectBbsNttList.do?key=3331&bbsNo=684&sf.dc=85513&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "sw안전보안전공"
+          - "안전보안"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_security/selectBbsNttList.do?key=3332&bbsNo=955"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=955"
+          - "faq"
+        collect_patterns:
+          - "bbsno=955"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_security/selectTnSchafsSchdulListUS.do?key=9049&sc1=10&sa1=u_security"
+        collect_seed_pages: true
   - slug: mobility_software
     department: mobility_software
     base_url: "https://www.kyonggi.ac.kr/u_mobility/index.do"
