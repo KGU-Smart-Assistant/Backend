@@ -1864,6 +1864,35 @@ department_sites:
     department: mobility_software
     base_url: "https://www.kyonggi.ac.kr/u_mobility/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_mobility/selectBbsNttList.do?key=9942&bbsNo=1415&selfAt=Y"
+        allowed_author_department_filters:
+          - "모빌리티"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_mobility/selectBbsNttList.do?key=9943&bbsNo=1416&selfAt=Y"
+        allowed_keyword_filters:
+          - "모빌리티"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_mobility/selectBbsNttList.do?key=9945&bbsNo=1417"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=1417"
+          - "faq"
+        collect_patterns:
+          - "bbsno=1417"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_mobility/selectTnSchafsSchdulListUS.do?key=9946"
+        collect_seed_pages: true
   - slug: convergence_science_college
     department: convergence_science_college
     base_url: "https://www.kyonggi.ac.kr/fsbt/index.do"
@@ -1910,38 +1939,317 @@ department_sites:
     department: mathematics
     base_url: "https://www.kyonggi.ac.kr/u_math/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_math/selectBbsNttList.do?key=3347&bbsNo=1073&sf.dc=80401&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "수학과"
+          - "수학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_math/selectBbsNttList.do?key=3348&bbsNo=684&sf.dc=80401&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "수학과"
+          - "수학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_math/selectBbsNttList.do?key=3349&bbsNo=956"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=956"
+          - "faq"
+        collect_patterns:
+          - "bbsno=956"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_math/selectTnSchafsSchdulListUS.do?key=9051&sc1=10&sa1=u_math"
+        collect_seed_pages: true
   - slug: chemistry
     department: chemistry
     base_url: "https://www.kyonggi.ac.kr/u_chemistry/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_chemistry/selectBbsNttList.do?key=2316&bbsNo=1073&sf.dc=80403&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "화학과"
+          - "화학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_chemistry/selectBbsNttList.do?key=2317&bbsNo=684&sf.dc=80403&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "화학과"
+          - "화학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_chemistry/selectBbsNttList.do?key=2318&bbsNo=957"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=957"
+          - "faq"
+        collect_patterns:
+          - "bbsno=957"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_chemistry/selectTnSchafsSchdulListUS.do?key=9052&sc1=10&sa1=u_chemistry"
+        collect_seed_pages: true
   - slug: life_science
     department: life_science
     base_url: "https://www.kyonggi.ac.kr/u_life/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_life/selectBbsNttList.do?key=2301&bbsNo=1073&sf.dc=81015&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "생명과학전공"
+          - "생명과학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_life/selectBbsNttList.do?key=2302&bbsNo=684&sf.dc=81015&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "생명과학전공"
+          - "생명과학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_life/selectBbsNttList.do?key=2303&bbsNo=958"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=958"
+          - "faq"
+        collect_patterns:
+          - "bbsno=958"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_life/selectTnSchafsSchdulListUS.do?key=9053&sc1=10&sa1=u_life"
+        collect_seed_pages: true
   - slug: food_bioengineering
     department: food_bioengineering
     base_url: "https://www.kyonggi.ac.kr/u_foodbio/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_foodbio/selectBbsNttList.do?key=3357&bbsNo=584&sf.dc=81016&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "식품생물공학전공"
+          - "식품생물공학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_foodbio/selectBbsNttList.do?key=3360&bbsNo=684&sf.dc=81016&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "식품생물공학전공"
+          - "식품생물공학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_foodbio/selectBbsNttList.do?key=3361&bbsNo=959"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=959"
+          - "faq"
+        collect_patterns:
+          - "bbsno=959"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_foodbio/selectTnSchafsSchdulListUS.do?key=9318&sc1=10&sa1=u_foodbio"
+        collect_seed_pages: true
   - slug: convergence_science
     department: convergence_science
     base_url: "https://www.kyonggi.ac.kr/converg-sci/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/converg-sci/selectBbsNttList.do?key=9976&bbsNo=1073&sf.dc=T1450&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "융합과학부"
+          - "융합과학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/converg-sci/selectBbsNttList.do?key=9977&bbsNo=684&sf.dc=T1450&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "융합과학부"
+          - "융합과학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/converg-sci/selectBbsNttList.do?key=9978&bbsNo=1420"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=1420"
+          - "faq"
+        collect_patterns:
+          - "bbsno=1420"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/converg-sci/selectTnSchafsSchdulListUS.do?key=9979"
+        collect_seed_pages: true
   - slug: engineering_college
     department: engineering_college
     base_url: "https://www.kyonggi.ac.kr/u_engineering/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_engineering/selectBbsNttList.do?key=3398&bbsNo=1073&sf.dc=A1440&sf.dcof=of1&sf.of1=C&selfAt=Y"
+        allowed_author_department_filters:
+          - "창의공과대학"
+          - "창의공과"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_engineering/selectBbsNttList.do?key=3399&bbsNo=684&sf.dc=18E50&sf.dcof=of2&sf.of2=C&selfAt=Y"
+        allowed_keyword_filters:
+          - "창의공과대학"
+          - "창의공과"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_engineering/selectBbsNttList.do?key=3400&bbsNo=960"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=960"
+          - "faq"
+        collect_patterns:
+          - "bbsno=960"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_engineering/selectTnSchafsSchdulListUS.do?key=9054&sc1=10&sa1=u_engineering"
+        collect_seed_pages: true
   - slug: creative_engineering
     department: creative_engineering
     base_url: "https://www.kyonggi.ac.kr/engcrea/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/engcrea/selectBbsNttList.do?key=9990&bbsNo=1073&sf.dc=T1440&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "창의공학부"
+          - "창의공학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/engcrea/selectBbsNttList.do?key=9991&bbsNo=684&sf.dc=T1440&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "창의공학부"
+          - "창의공학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/engcrea/selectBbsNttList.do?key=9992&bbsNo=1422"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=1422"
+          - "faq"
+        collect_patterns:
+          - "bbsno=1422"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/engcrea/selectTnSchafsSchdulListUS.do?key=9993"
+        collect_seed_pages: true
   - slug: architecture
     department: architecture
     base_url: "https://www.kyonggi.ac.kr/u_architecture/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_architecture/selectBbsNttList.do?key=2561&bbsNo=1073&sf.dc=81018&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "건축학과"
+          - "건축"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_architecture/selectBbsNttList.do?key=2562&bbsNo=684&sf.dc=81018&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "건축학과"
+          - "건축"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_architecture/selectBbsNttList.do?key=2563&bbsNo=961"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=961"
+          - "faq"
+        collect_patterns:
+          - "bbsno=961"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_architecture/selectTnSchafsSchdulListUS.do?key=9055&sc1=10&sa1=u_architecture"
+        collect_seed_pages: true
   - slug: mechanical_systems
     department: mechanical_systems
     base_url: "https://www.kyonggi.ac.kr/u_mechanical/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_mechanical/selectBbsNttList.do?key=2723&bbsNo=1073&sf.dc=85431&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "기계시스템공학과"
+          - "기계시스템"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_mechanical/selectBbsNttList.do?key=2724&bbsNo=684&sf.dc=85431&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "기계시스템공학과"
+          - "기계시스템"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_mechanical/selectBbsNttList.do?key=2725&bbsNo=968"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=968"
+          - "faq"
+        collect_patterns:
+          - "bbsno=968"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_mechanical/selectTnSchafsSchdulListUS.do?key=9060&sc1=10&sa1=u_mechanical"
+        collect_seed_pages: true
   - slug: social_energy_systems_engineering
     department: social_energy_systems_engineering
     base_url: "https://www.kyonggi.ac.kr/cee/index.do"
