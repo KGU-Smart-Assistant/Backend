@@ -307,6 +307,34 @@ department_sites:
     department: humanities_division
     base_url: "https://www.kyonggi.ac.kr/dh/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/dh/selectBbsNttList.do?bbsNo=1073&key=9961&sf.dc=T1470&sf.dcof=of1&sf.of1=M&selfAt=Y"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/dh/selectBbsNttList.do?bbsNo=684&key=9962&sf.dc=T1470&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "인문학부"
+          - "인문"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/dh/selectBbsNttList.do?bbsNo=1418&key=9963"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=1418"
+          - "faq"
+        collect_patterns:
+          - "bbsno=1418"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/dh/selectTnSchafsSchdulListUS.do?key=9964"
+        collect_seed_pages: true
   - slug: korean_language_literature
     department: korean_language_literature
     base_url: "http://kyonggi.ac.kr/gm/index.do"
@@ -357,34 +385,282 @@ department_sites:
     department: history
     base_url: "https://www.kyonggi.ac.kr/u_history/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_history/selectBbsNttList.do?bbsNo=1073&key=6682&sf.dc=80106&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "사학과"
+          - "사학"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_history/selectBbsNttList.do?bbsNo=684&key=6683&sf.dc=80106&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "사학과"
+          - "사학"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_history/selectBbsNttList.do?bbsNo=919&key=6684"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=919"
+          - "faq"
+        collect_patterns:
+          - "bbsno=919"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_history/selectTnSchafsSchdulListUS.do?key=9007&sa1=u_history&sc1=10"
+        collect_seed_pages: true
   - slug: library
     department: library
     base_url: "https://www.kyonggi.ac.kr/u_library/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_library/selectBbsNttList.do?bbsNo=1073&key=6697&sf.dc=80107&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "문헌정보학과"
+          - "문헌정보"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_library/selectBbsNttList.do?bbsNo=684&key=6698&sf.dc=80107&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "문헌정보학과"
+          - "문헌정보"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_library/selectBbsNttList.do?bbsNo=920&key=6699"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=920"
+          - "faq"
+        collect_patterns:
+          - "bbsno=920"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_library/selectTnSchafsSchdulListUS.do?key=9008&sa1=u_library&sc1=10"
+        collect_seed_pages: true
   - slug: creative_writing
     department: creative_writing
     base_url: "https://www.kyonggi.ac.kr/mc/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/mc/selectBbsNttList.do?bbsNo=1073&key=3121&sf.dc=81001&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "문예창작학과"
+          - "문예창작"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/mc/selectBbsNttList.do?bbsNo=684&key=3122&sf.dc=81001&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "문예창작학과"
+          - "문예창작"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/mc/selectBbsNttList.do?bbsNo=917&key=3123"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=917"
+          - "faq"
+        collect_patterns:
+          - "bbsno=917"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/mc/selectTnSchafsSchdulListUS.do?key=9005&sa1=mc&sc1=10"
+        collect_seed_pages: true
   - slug: child_education
     department: child_education
     base_url: "https://www.kyonggi.ac.kr/u_child/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_child/selectBbsNttList.do?bbsNo=1073&key=6713&sf.dc=81046&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "유아교육과"
+          - "유아교육"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_child/selectBbsNttList.do?bbsNo=684&key=6714&sf.dc=81046&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "유아교육과"
+          - "유아교육"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_child/selectBbsNttList.do?bbsNo=884&key=6715"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=884"
+          - "faq"
+        collect_patterns:
+          - "bbsno=884"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_child/selectTnSchafsSchdulListUS.do?key=9009&sa1=u_child&sc1=10"
+        collect_seed_pages: true
   - slug: german
     department: german
     base_url: "https://www.kyonggi.ac.kr/u_german/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_german/selectBbsNttList.do?bbsNo=1073&key=6728&sf.dc=80103&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "독어독문전공"
+          - "독어독문"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_german/selectBbsNttList.do?bbsNo=684&key=6729&sf.dc=80103&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "독어독문전공"
+          - "독어독문"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_german/selectBbsNttList.do?bbsNo=603&key=6730"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=603"
+          - "faq"
+        collect_patterns:
+          - "bbsno=603"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_german/selectTnSchafsSchdulListUS.do?key=9010&sc1=10&sa1=u_german"
+        collect_seed_pages: true
   - slug: french
     department: french
     base_url: "https://www.kyonggi.ac.kr/u_french/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_french/selectBbsNttList.do?bbsNo=1073&key=6744&sf.dc=81002&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "프랑스어문전공"
+          - "프랑스어문"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_french/selectBbsNttList.do?bbsNo=684&key=6745&sf.dc=81002&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "프랑스어문전공"
+          - "프랑스어문"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_french/selectBbsNttList.do?bbsNo=921&key=6746"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=921"
+          - "faq"
+        collect_patterns:
+          - "bbsno=921"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_french/selectTnSchafsSchdulListUS.do?key=9011&sc1=10&sa1=u_french"
+        collect_seed_pages: true
   - slug: japanese
     department: japanese
     base_url: "https://www.kyonggi.ac.kr/JPLM/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/JPLM/selectBbsNttList.do?bbsNo=1073&key=3135&sf.dc=80105&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "일어일문전공"
+          - "일어일문"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/JPLM/selectBbsNttList.do?bbsNo=684&key=3136&sf.dc=80105&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "일어일문전공"
+          - "일어일문"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/JPLM/selectBbsNttList.do?bbsNo=922&key=3137"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=922"
+          - "faq"
+        collect_patterns:
+          - "bbsno=922"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/JPLM/selectTnSchafsSchdulListUS.do?key=9012&sc1=10&sa1=JPLM"
+        collect_seed_pages: true
   - slug: chinese
     department: chinese
     base_url: "https://www.kyonggi.ac.kr/u_chinese/index.do"
     site_type: portal
+    source_overrides:
+      notice:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_chinese/selectBbsNttList.do?bbsNo=1073&key=7071&sf.dc=85201&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        allowed_author_department_filters:
+          - "중어중문전공"
+          - "중어중문"
+      materials:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_chinese/selectBbsNttList.do?bbsNo=684&key=7072&sf.dc=85201&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        allowed_keyword_filters:
+          - "중어중문전공"
+          - "중어중문"
+          - "SAS"
+          - "전공설계융합"
+          - "전공탐색세미나"
+          - "건강증진센터"
+      faq:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_chinese/selectBbsNttList.do?bbsNo=923&key=7073"
+        collect_seed_pages: true
+        follow_patterns:
+          - "bbsno=923"
+          - "faq"
+        collect_patterns:
+          - "bbsno=923"
+          - "faq"
+      schedule:
+        seed_urls:
+          - "https://www.kyonggi.ac.kr/u_chinese/selectTnSchafsSchdulListUS.do?key=9013&sc1=10&sa1=u_chinese"
+        collect_seed_pages: true
   - slug: arts_sports_college
     department: arts_sports_college
     base_url: "https://www.kyonggi.ac.kr/phyedu/index.do"
