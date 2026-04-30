@@ -230,7 +230,7 @@ def test_build_html_document_skips_empty_faq_page() -> None:
     assert document is None
 
 
-def test_build_html_document_skips_faq_list_page_without_detail_parsing() -> None:
+def test_build_html_document_keeps_non_empty_faq_list_page() -> None:
     result = SimpleNamespace(
         markdown=SimpleNamespace(
             fit_markdown="FAQ\n질문 답변 검색\n예시 질문"
@@ -247,7 +247,7 @@ def test_build_html_document_skips_faq_list_page_without_detail_parsing() -> Non
         collected_at=datetime(2026, 4, 29, 12, 0, 0),
     )
 
-    assert document is None
+    assert document is not None
 
 
 def test_build_html_document_applies_keyword_filters() -> None:

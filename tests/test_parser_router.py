@@ -23,6 +23,29 @@ def test_parser_router_uses_faq_parser_for_faq_category() -> None:
     assert parsed is None
 
 
+def test_parser_router_keeps_non_empty_faq_list_page() -> None:
+    router = ParserRouter()
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown="FAQ\n질문 답변 검색\n휴학은 어디서 신청하나요?\n학과 사무실 방문"
+        ),
+        metadata={"title": "FAQ - 예시학과"},
+    )
+
+    parsed = router.parse(
+        result=result,
+        context=ParseContext(
+            url="https://example.com/selectBbsNttList.do?bbsNo=950",
+            category="faq",
+            department="example",
+        ),
+    )
+
+    assert parsed is not None
+    assert parsed.title == "FAQ - 예시학과"
+    assert parsed.content == "휴학은 어디서 신청하나요?\n학과 사무실 방문"
+
+
 def test_parser_router_uses_schedule_parser_for_schedule_category() -> None:
     router = ParserRouter()
     result = SimpleNamespace(

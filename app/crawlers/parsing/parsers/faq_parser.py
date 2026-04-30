@@ -18,13 +18,80 @@ class FaqParser(BaseParser):
         normalized = " ".join(content.split())
         if "총게시물 : 0" in normalized or "총게시물: 0" in normalized:
             return None
-        if "selectbbsnttlist.do" in context.url.lower():
+
+        title = self._extract_title(result)
+        cleaned_lines = self._extract_faq_lines(content)
+        if not cleaned_lines:
             return None
 
-        for line in content.splitlines():
-            stripped = line.strip()
-            if not stripped or stripped.startswith("![") or stripped.startswith("["):
-                continue
-            return ParsedDocument(title=stripped[:300], content=content)
+        return ParsedDocument(
+            title=(title or cleaned_lines[0])[:300],
+            content="\n".join(cleaned_lines),
+        )
 
+    def _extract_title(self, result) -> str | None:
+        metadata = getattr(result, "metadata", None) or {}
+        for key in ("title", "og:title"):
+            value = str(metadata.get(key) or "").strip()
+            if value:
+                return value
         return None
+
+    def _extract_faq_lines(self, content: str) -> list[str]:
+        lines = [line.strip() for line in content.splitlines() if line.strip()]
+        cleaned_lines: list[str] = []
+        in_faq_section = False
+
+        for line in lines:
+            normalized = " ".join(line.split()).casefold()
+            if normalized in {"faq", "## faq"}:
+                in_faq_section = True
+                continue
+
+            if not in_faq_section:
+                continue
+
+            if self._should_skip_line(line):
+                continue
+
+            cleaned_lines.append(line)
+
+        if cleaned_lines:
+            return cleaned_lines
+
+        for line in lines:
+            if self._should_skip_line(line):
+                continue
+            cleaned_lines.append(line)
+
+        return cleaned_lines
+
+    def _should_skip_line(self, line: str) -> bool:
+        if not line:
+            return True
+
+        stripped = line.strip()
+        if (
+            stripped.startswith("![")
+            or stripped.startswith("[")
+            or stripped.startswith("* [")
+            or stripped.startswith("*")
+            or stripped.startswith("1.")
+            or stripped.startswith("2.")
+            or stripped.startswith("3.")
+        ):
+            return True
+
+        normalized = " ".join(stripped.split()).casefold()
+        boilerplate_tokens = (
+            "faq",
+            "질문 답변 검색",
+            "question answer search",
+            "본문 바로가기",
+            "열린광장",
+            "페이스북",
+            "트위터",
+            "네이버블로그",
+            "카카오톡",
+        )
+        return any(token in normalized for token in boilerplate_tokens)
