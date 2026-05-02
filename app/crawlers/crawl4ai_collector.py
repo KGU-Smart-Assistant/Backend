@@ -19,6 +19,9 @@ from app.schemas import Document
 DOCUMENT_EXTENSIONS = {
     ".pdf": "pdf",
     ".docx": "docx",
+    ".hwp": "hwp",
+    ".hwpx": "hwpx",
+    ".zip": "zip",
     ".png": "image",
     ".jpg": "image",
     ".jpeg": "image",
@@ -41,6 +44,9 @@ DEFAULT_INCLUDE_PATTERNS = (
     "contents.do",
     ".pdf",
     ".docx",
+    ".hwp",
+    ".hwpx",
+    ".zip",
 )
 
 DEFAULT_EXCLUDE_PATTERNS = (
@@ -334,7 +340,7 @@ def _with_query_param(url: str, key: str, value: str) -> str:
 
 def _looks_like_document_url(url: str) -> bool:
     lowered = url.lower()
-    return any(ext in lowered for ext in DOCUMENT_EXTENSIONS)
+    return "downloadbbsfile.do" in lowered or any(ext in lowered for ext in DOCUMENT_EXTENSIONS)
 
 
 def _should_collect_html_url(

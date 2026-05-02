@@ -33,6 +33,7 @@ defaults:
       - ".docx"
       - ".hwp"
       - ".hwpx"
+      - ".zip"
     collect_patterns:
       - "selectbbsnttview.do"
     exclude_patterns:
@@ -100,6 +101,7 @@ defaults:
       - ".docx"
       - ".hwp"
       - ".hwpx"
+      - ".zip"
     collect_patterns:
       - "board"
       - "index.php"
@@ -1719,6 +1721,7 @@ department_sites:
           - ".docx"
           - ".hwp"
           - ".hwpx"
+          - ".zip"
         allowed_keyword_filters:
           - "전공학점 인정"
           - "전공이수자격원"

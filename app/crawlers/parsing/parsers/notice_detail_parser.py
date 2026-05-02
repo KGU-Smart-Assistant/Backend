@@ -9,6 +9,9 @@ from app.crawlers.parsing.schemas import ParseContext, ParsedDocument
 DOCUMENT_EXTENSIONS = (
     ".pdf",
     ".docx",
+    ".hwp",
+    ".hwpx",
+    ".zip",
     ".png",
     ".jpg",
     ".jpeg",

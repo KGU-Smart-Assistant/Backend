@@ -103,6 +103,11 @@ def test_is_allowed_url_still_allows_document_links() -> None:
         allowed_domains={"example.com"},
         config=config,
     )
+    assert _is_allowed_url(
+        "https://example.com/downloadBbsFile.do?atchmnflNo=123",
+        allowed_domains={"example.com"},
+        config=config,
+    )
 
 
 def test_is_allowed_url_does_not_block_searchcnd_query() -> None:
