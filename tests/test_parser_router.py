@@ -23,6 +23,30 @@ def test_parser_router_uses_faq_parser_for_faq_category() -> None:
     assert parsed is None
 
 
+def test_parser_router_skips_korean_empty_faq_list_page() -> None:
+    router = ParserRouter()
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown=(
+                "FAQ\n게시물 검색\n총게시물 : _0_ 건 페이지 : _1_ / 1\n"
+                "검색결과가 없습니다."
+            )
+        ),
+        metadata={"title": "FAQ - 호텔경영전공"},
+    )
+
+    parsed = router.parse(
+        result=result,
+        context=ParseContext(
+            url="https://example.com/selectBbsNttList.do?bbsNo=978",
+            category="faq",
+            department="hotel_management",
+        ),
+    )
+
+    assert parsed is None
+
+
 def test_parser_router_keeps_non_empty_faq_list_page() -> None:
     router = ParserRouter()
     result = SimpleNamespace(
@@ -64,6 +88,36 @@ def test_parser_router_uses_schedule_parser_for_schedule_category() -> None:
 
     assert parsed is not None
     assert parsed.title == "학사일정 - 예시학과"
+
+
+def test_parser_router_skips_global_navigation_title_candidates() -> None:
+    router = ParserRouter()
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown=(
+                "* [경기대학교](https://www.kyonggi.ac.kr/www/index.do)\n"
+                "* [입시홈페이지](http://enter.kyonggi.ac.kr/index.do)\n"
+                "주메뉴 열기 입체조형학과\n"
+                "* 인쇄\n"
+                "입체조형학과 2022학년도 1학기 실험실습비 사용내역\n"
+                "_작성자_ 입체조형학과\n"
+            )
+        ),
+        metadata={"title": "* 경기대학교"},
+        links={"internal": []},
+    )
+
+    parsed = router.parse(
+        result=result,
+        context=ParseContext(
+            url="https://www.kyonggi.ac.kr/3Dimensional_Art/selectBbsNttView.do",
+            category="materials",
+            department="dimensional_art",
+        ),
+    )
+
+    assert parsed is not None
+    assert parsed.title == "입체조형학과 2022학년도 1학기 실험실습비 사용내역"
 
 
 def test_parser_router_applies_site_specific_parser_options() -> None:

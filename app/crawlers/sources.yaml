@@ -311,6 +311,11 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/dh/selectBbsNttList.do?bbsNo=1073&key=9961&sf.dc=T1470&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        follow_patterns:
+          - "selfat=y"
+        allowed_author_department_filters:
+          - "인문학부"
+          - "인문대학"
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/dh/selectBbsNttList.do?bbsNo=684&key=9962&sf.dc=T1470&sf.dcof=of2&sf.of2=M&selfAt=Y"
@@ -1090,6 +1095,8 @@ department_sites:
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/sports_science/selectBbsNttList.do?key=2472&bbsNo=684&sf.dc=80702&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        follow_patterns:
+          - "selfat=y"
         allowed_keyword_filters:
           - "스포츠건강과학전공"
           - "스포츠건강과학"
@@ -1442,6 +1449,8 @@ department_sites:
         seed_urls:
           - "https://www.kyonggi.ac.kr/miys/selectBbsNttList.do?key=6978&bbsNo=1073&sf.dc=85314&sf.dcof=of1&sf.of1=M&selfAt=Y"
         allowed_author_department_filters:
+          - "청소년전공"
+          - "청소년학"
           - "청소년학전공"
           - "청소년학"
       materials:
@@ -1699,7 +1708,16 @@ department_sites:
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_business/selectBbsNttList.do?key=3305&bbsNo=558&sf.dc=85531&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        follow_patterns:
+          - "bbsno=558"
+          - ".pdf"
+          - ".docx"
+          - ".hwp"
+          - ".hwpx"
         allowed_keyword_filters:
+          - "전공학점 인정"
+          - "전공이수자격원"
+          - "졸업사정"
           - "경영학전공"
           - "경영학"
           - "SAS"
@@ -1898,6 +1916,8 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/u_mobility/selectBbsNttList.do?key=9942&bbsNo=1415&selfAt=Y"
+        follow_patterns:
+          - "bbsno=1415"
         allowed_author_department_filters:
           - "모빌리티"
       materials:

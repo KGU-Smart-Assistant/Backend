@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import os
 import re
 from collections import deque
 from dataclasses import dataclass, field
@@ -99,9 +100,17 @@ async def _collect_documents_with_crawl4ai(
         _normalize_domain(urlparse(seed).netloc) for seed in config.seed_urls
     }
 
+    browser_channel = os.getenv("CRAWL4AI_BROWSER_CHANNEL")
+    browser_config_kwargs = {
+        "headless": config.headless,
+        "java_script_enabled": True,
+    }
+    if browser_channel:
+        browser_config_kwargs["channel"] = browser_channel
+        browser_config_kwargs["chrome_channel"] = browser_channel
+
     browser_config = BrowserConfig(
-        headless=config.headless,
-        java_script_enabled=True,
+        **browser_config_kwargs,
     )
     run_config = CrawlerRunConfig(
         cache_mode=CacheMode.BYPASS,

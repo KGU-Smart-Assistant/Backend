@@ -106,6 +106,10 @@ class NoticeDetailParser(BaseParser):
             if normalized and not self._should_skip_title(normalized):
                 return normalized[:300]
 
+        detail_title = self._extract_title_after_print_action(content)
+        if detail_title:
+            return detail_title[:300]
+
         for line in content.splitlines():
             normalized_line = line.strip()
             if normalized_line.startswith("_작성자") or normalized_line.startswith("_작성일"):
@@ -232,6 +236,27 @@ class NoticeDetailParser(BaseParser):
         normalized = re.sub(r"\s+이미지\s+\d+$", "", normalized)
         return normalized.strip()
 
+    def _extract_title_after_print_action(self, content: str) -> Optional[str]:
+        seen_print_action = False
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped in {"* 인쇄", "인쇄"}:
+                seen_print_action = True
+                continue
+            if not seen_print_action:
+                continue
+            if not stripped or stripped.startswith("*") or stripped.startswith("["):
+                continue
+            normalized = self._sanitize_extracted_title(re.sub(r"^#+\s*", "", stripped))
+            if (
+                not normalized
+                or self._should_skip_title(normalized)
+                or self._looks_like_metadata_title(normalized)
+            ):
+                continue
+            return normalized
+        return None
+
     def _sanitize_extracted_title(self, value: str) -> str:
         normalized = self._normalize_text(value)
         normalized = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", normalized)
@@ -261,6 +286,20 @@ class NoticeDetailParser(BaseParser):
 
     def _should_skip_title(self, value: str) -> bool:
         lowered = value.lower()
+        normalized = self._sanitize_extracted_title(value).strip("*_ ")
+        navigation_titles = {
+            "경기대학교",
+            "입시홈페이지",
+            "kutis",
+            "통합검색",
+            "로그인",
+            "language",
+            "주메뉴 열기",
+        }
+        if normalized.casefold() in navigation_titles:
+            return True
+        if normalized.startswith("주메뉴 열기"):
+            return True
         return any(token in lowered for token in SKIP_TITLE_TOKENS)
 
     def _looks_like_generic_board_title(self, value: str) -> bool:

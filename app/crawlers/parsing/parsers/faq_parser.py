@@ -16,6 +16,12 @@ class FaqParser(BaseParser):
             return None
 
         normalized = " ".join(content.split())
+        if (
+            "총게시물" in normalized
+            and "_0_" in normalized
+            and "검색결과가 없습니다" in normalized
+        ):
+            return None
         if "총게시물 : 0" in normalized or "총게시물: 0" in normalized:
             return None
 
