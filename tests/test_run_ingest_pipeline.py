@@ -237,3 +237,135 @@ def test_classify_source_report_statuses() -> None:
         exact_duplicates_removed=0,
         version_duplicates_removed=0,
     )["status"] == "ok"
+
+
+def test_select_sources_applies_name_prefix_and_limit_filters() -> None:
+    sources = [
+        {"name": "alpha_notice"},
+        {"name": "alpha_materials"},
+        {"name": "beta_notice"},
+    ]
+
+    selected = run_ingest.select_sources(
+        sources,
+        names=["alpha_notice", "beta_notice"],
+        prefixes=["alpha_", "beta_"],
+        limit=1,
+    )
+
+    assert [source["name"] for source in selected] == ["alpha_notice"]
+
+
+def test_apply_runtime_overrides_updates_optional_settings() -> None:
+    source = {
+        "name": "alpha_notice",
+        "embed": True,
+        "max_pages": 20,
+        "max_pagination_pages": 200,
+    }
+
+    overridden = run_ingest.apply_runtime_overrides(
+        source,
+        skip_embed=True,
+        max_pages=5,
+        max_pagination_pages=2,
+    )
+
+    assert overridden["embed"] is False
+    assert overridden["max_pages"] == 5
+    assert overridden["max_pagination_pages"] == 2
+    assert source["embed"] is True
+
+
+def test_run_ingest_main_applies_cli_filters_and_runtime_overrides(monkeypatch, capsys) -> None:
+    now = datetime(2026, 4, 10, 12, 0, 0)
+    source_config = [
+        {
+            "name": "alpha_notice",
+            "seed_urls": ["https://example.com/notices"],
+            "category": "academic",
+            "department": "academic_affairs",
+            "max_pages": 20,
+            "max_pagination_pages": 200,
+            "embed": True,
+        },
+        {
+            "name": "beta_notice",
+            "seed_urls": ["https://example.com/other"],
+            "category": "academic",
+            "department": "academic_affairs",
+            "max_pages": 20,
+            "max_pagination_pages": 200,
+            "embed": True,
+        },
+    ]
+    documents = [
+        _build_document(
+            doc_id="unique",
+            source_url="https://example.com/notices/1",
+            title="Academic Notice",
+            content="long-notice-" * 120,
+            collected_at=now,
+        )
+    ]
+    built_configs = []
+
+    monkeypatch.setattr(run_ingest, "load_sources_config", lambda _: source_config)
+
+    def _build_config(source):
+        built_configs.append(source)
+
+        class DummyConfig:
+            pass
+
+        return DummyConfig()
+
+    monkeypatch.setattr(run_ingest, "build_crawler_config", _build_config)
+    monkeypatch.setattr(run_ingest, "collect_documents_with_crawl4ai", lambda _: documents)
+    monkeypatch.setattr(
+        run_ingest,
+        "embed_chunks",
+        lambda _: (_ for _ in ()).throw(AssertionError("embed should be skipped")),
+    )
+    monkeypatch.setattr(run_ingest, "default_report_output_dir", lambda: Path(".tmp/test-reports"))
+    monkeypatch.setattr(
+        run_ingest,
+        "write_ingest_report",
+        lambda report, output_dir: output_dir / "ingest-report-test.json",
+    )
+
+    run_ingest.main(
+        [
+            "--source-prefix",
+            "alpha_",
+            "--limit",
+            "1",
+            "--skip-embed",
+            "--max-pages",
+            "5",
+            "--max-pagination-pages",
+            "2",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert len(built_configs) == 1
+    assert built_configs[0]["name"] == "alpha_notice"
+    assert built_configs[0]["embed"] is False
+    assert built_configs[0]["max_pages"] == 5
+    assert built_configs[0]["max_pagination_pages"] == 2
+    assert "source_count=1" not in captured.out
+    assert "[alpha_notice] raw_documents=1 documents=1" in captured.out
+
+
+def test_run_ingest_main_reports_no_matching_sources(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(
+        run_ingest,
+        "load_sources_config",
+        lambda _: [{"name": "alpha_notice", "seed_urls": ["https://example.com/notices"]}],
+    )
+
+    run_ingest.main(["--source", "missing_source"])
+
+    captured = capsys.readouterr()
+    assert "No sources matched the requested filters." in captured.out

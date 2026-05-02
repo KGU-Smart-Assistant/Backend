@@ -1,3 +1,4 @@
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -226,12 +227,104 @@ def classify_source_report(
     }
 
 
-def main() -> None:
+def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run the crawler ingestion pipeline.")
+    parser.add_argument(
+        "--source",
+        action="append",
+        dest="sources",
+        help="Limit ingestion to the named source. Can be provided multiple times.",
+    )
+    parser.add_argument(
+        "--source-prefix",
+        action="append",
+        dest="source_prefixes",
+        help="Limit ingestion to sources whose names start with the prefix. Can be provided multiple times.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="Process at most this many matching sources.",
+    )
+    parser.add_argument(
+        "--skip-embed",
+        action="store_true",
+        help="Skip embedding even if a source enables it.",
+    )
+    parser.add_argument(
+        "--max-pages",
+        type=int,
+        help="Override per-source max_pages for this run.",
+    )
+    parser.add_argument(
+        "--max-pagination-pages",
+        type=int,
+        help="Override per-source max_pagination_pages for this run.",
+    )
+    return parser.parse_args(argv)
+
+
+def select_sources(
+    sources: List[Dict[str, Any]],
+    *,
+    names: List[str] | None = None,
+    prefixes: List[str] | None = None,
+    limit: int | None = None,
+) -> List[Dict[str, Any]]:
+    selected_sources = sources
+
+    if names:
+        allowed_names = set(names)
+        selected_sources = [
+            source for source in selected_sources if source.get("name") in allowed_names
+        ]
+
+    if prefixes:
+        selected_sources = [
+            source
+            for source in selected_sources
+            if any(source.get("name", "").startswith(prefix) for prefix in prefixes)
+        ]
+
+    if limit is not None and limit >= 0:
+        selected_sources = selected_sources[:limit]
+
+    return selected_sources
+
+
+def apply_runtime_overrides(
+    source: Dict[str, Any],
+    *,
+    skip_embed: bool,
+    max_pages: int | None,
+    max_pagination_pages: int | None,
+) -> Dict[str, Any]:
+    overridden = dict(source)
+    if skip_embed:
+        overridden["embed"] = False
+    if max_pages is not None:
+        overridden["max_pages"] = max_pages
+    if max_pagination_pages is not None:
+        overridden["max_pagination_pages"] = max_pagination_pages
+    return overridden
+
+
+def main(argv: List[str] | None = None) -> None:
+    args = parse_args([] if argv is None else argv)
     config_path = Path(__file__).resolve().with_name("sources.yaml")
 
     sources = load_sources_config(config_path)
     if not sources:
         print("No sources configured in app/crawlers/sources.yaml")
+        return
+    sources = select_sources(
+        sources,
+        names=args.sources,
+        prefixes=args.source_prefixes,
+        limit=args.limit,
+    )
+    if not sources:
+        print("No sources matched the requested filters.")
         return
 
     total_documents = 0
@@ -240,7 +333,13 @@ def main() -> None:
     source_reports: List[Dict[str, Any]] = []
     source_status_counts: Dict[str, int] = {}
 
-    for source in sources:
+    for configured_source in sources:
+        source = apply_runtime_overrides(
+            configured_source,
+            skip_embed=args.skip_embed,
+            max_pages=args.max_pages,
+            max_pagination_pages=args.max_pagination_pages,
+        )
         crawler_config = build_crawler_config(source)
         raw_documents = collect_documents_with_crawl4ai(crawler_config)
         dedup_result = select_latest_documents(raw_documents)
@@ -312,4 +411,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
