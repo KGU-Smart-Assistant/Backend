@@ -60,6 +60,7 @@ class Crawl4AICollectorConfig:
     seed_urls: List[str]
     max_pages: int = 20
     max_depth: int = 2
+    max_pagination_pages: int = 200
     category: Optional[str] = None
     department: Optional[str] = None
     include_patterns: Tuple[str, ...] = DEFAULT_INCLUDE_PATTERNS
@@ -125,7 +126,7 @@ async def _collect_documents_with_crawl4ai(
     collected_at = datetime.now()
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        while queue and len(visited_html_urls) < config.max_pages:
+        while queue and _within_page_limit(visited_html_urls, config.max_pages):
             current_url, depth = queue.popleft()
             if current_url in visited_html_urls:
                 continue
@@ -163,6 +164,14 @@ async def _collect_documents_with_crawl4ai(
                 allowed_domains=allowed_domains,
                 config=config,
             )
+            discovered_html_urls.update(
+                _extract_pagination_urls(
+                    url=current_url,
+                    result=result,
+                    allowed_domains=allowed_domains,
+                    config=config,
+                )
+            )
             collected_doc_urls.update(discovered_doc_urls)
 
             if depth >= config.max_depth:
@@ -184,6 +193,10 @@ async def _collect_documents_with_crawl4ai(
         )
 
     return documents
+
+
+def _within_page_limit(visited_html_urls: Set[str], max_pages: int) -> bool:
+    return max_pages <= 0 or len(visited_html_urls) < max_pages
 
 
 def _build_html_document(
@@ -251,6 +264,72 @@ def _extract_links(
             html_urls.add(normalized)
 
     return html_urls, doc_urls
+
+
+def _extract_pagination_urls(
+    url: str,
+    result,
+    allowed_domains: Set[str],
+    config: Crawl4AICollectorConfig,
+) -> Set[str]:
+    if "selectbbsnttlist.do" not in url.lower():
+        return set()
+
+    last_page = _extract_last_page_index(result)
+    if last_page is None or last_page <= 1:
+        return set()
+
+    last_page = min(last_page, config.max_pagination_pages)
+    pagination_urls: Set[str] = set()
+    for page_index in range(1, last_page + 1):
+        page_url = _with_query_param(url, "pageIndex", str(page_index))
+        if _is_allowed_url(page_url, allowed_domains, config):
+            pagination_urls.add(_normalize_url(page_url))
+    return pagination_urls
+
+
+def _extract_last_page_index(result) -> Optional[int]:
+    markdown = getattr(result, "markdown", None)
+    content = (
+        getattr(markdown, "fit_markdown", None)
+        or getattr(markdown, "raw_markdown", None)
+        or ""
+    )
+    total_page_match = re.search(r"페이지\s*:\s*_?\d+_?\s*/\s*_?(\d+)_?", content)
+    if total_page_match:
+        return int(total_page_match.group(1))
+
+    page_indexes: Set[int] = set()
+    for link_group in (getattr(result, "links", {}) or {}).values():
+        for link in link_group:
+            href = (link or {}).get("href") or ""
+            parsed = urlparse(href)
+            for key, value in parse_qsl(parsed.query, keep_blank_values=True):
+                if key.casefold() == "pageindex" and value.isdigit():
+                    page_indexes.add(int(value))
+    if page_indexes:
+        return max(page_indexes)
+    return None
+
+
+def _with_query_param(url: str, key: str, value: str) -> str:
+    parsed = urlparse(url)
+    query_items = [
+        (item_key, item_value)
+        for item_key, item_value in parse_qsl(parsed.query, keep_blank_values=True)
+        if item_key.casefold() != key.casefold()
+    ]
+    query_items.append((key, value))
+    return urlunparse(
+        (
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            urlencode(query_items),
+            parsed.fragment,
+        )
+    )
 
 
 def _looks_like_document_url(url: str) -> bool:

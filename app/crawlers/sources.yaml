@@ -1,8 +1,9 @@
 defaults:
   portal_notice: &portal_notice
     category: notice
-    max_pages: 8
+    max_pages: 0
     max_depth: 2
+    max_pagination_pages: 200
     skip_images: true
     follow_patterns:
       - "bbsno=1073"
@@ -22,8 +23,9 @@ defaults:
 
   portal_materials: &portal_materials
     category: materials
-    max_pages: 8
+    max_pages: 0
     max_depth: 2
+    max_pagination_pages: 200
     skip_images: true
     follow_patterns:
       - "bbsno=684"
@@ -46,8 +48,9 @@ defaults:
 
   portal_faq: &portal_faq
     category: faq
-    max_pages: 5
+    max_pages: 0
     max_depth: 2
+    max_pagination_pages: 200
     follow_patterns:
       - "bbsno=950"
       - "faq"
@@ -87,7 +90,7 @@ defaults:
 
   external_notice: &external_notice
     category: notice
-    max_pages: 8
+    max_pages: 0
     max_depth: 2
     follow_patterns:
       - "board"
@@ -143,8 +146,9 @@ sources:
     department: university
     seed_urls:
       - "https://www.kyonggi.ac.kr/www/selectBbsNttList.do?key=7520&bbsNo=1073"
-    max_pages: 10
-    max_depth: 1
+    max_pages: 0
+    max_depth: 2
+    max_pagination_pages: 200
     follow_patterns:
       - "selectbbsnttlist.do"
       - "selectbbsnttview.do"
@@ -168,8 +172,9 @@ sources:
     department: scholarship_support
     seed_urls:
       - "https://www.kyonggi.ac.kr/scholarship/index.do"
-    max_pages: 5
+    max_pages: 0
     max_depth: 2
+    max_pagination_pages: 200
     follow_patterns:
       - "selectbbsnttlist.do"
       - "selectbbsnttview.do"

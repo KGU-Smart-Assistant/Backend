@@ -116,6 +116,7 @@ def build_crawler_config(source: Dict[str, Any]) -> Crawl4AICollectorConfig:
         seed_urls=seed_urls,
         max_pages=source.get("max_pages", 20),
         max_depth=source.get("max_depth", 2),
+        max_pagination_pages=source.get("max_pagination_pages", 200),
         category=source.get("category"),
         department=source.get("department"),
         include_patterns=tuple(source.get("include_patterns", DEFAULT_INCLUDE_PATTERNS)),

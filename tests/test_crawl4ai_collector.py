@@ -1,10 +1,13 @@
 from app.crawlers.crawl4ai_collector import (
     Crawl4AICollectorConfig,
     _build_html_document,
+    _extract_last_page_index,
+    _extract_pagination_urls,
     _html_url_priority,
     _is_allowed_url,
     _normalize_url,
     _should_collect_html_url,
+    _within_page_limit,
 )
 from datetime import datetime
 from types import SimpleNamespace
@@ -131,6 +134,47 @@ def test_normalize_url_sorts_query_parameters() -> None:
     assert normalized == (
         "https://example.com/selectTnSchafsSchdulListUS.do?key=9044&sa1=u_ai&sc1=10"
     )
+
+
+def test_extract_last_page_index_from_korean_board_text() -> None:
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown="게시물 검색\n총게시물 : _27_ 건 페이지 : _1_ / 3\n게시물 목록"
+        ),
+        links={},
+    )
+
+    assert _extract_last_page_index(result) == 3
+
+
+def test_extract_pagination_urls_expands_board_page_indexes() -> None:
+    config = Crawl4AICollectorConfig(
+        seed_urls=["https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1"],
+        follow_patterns=("bbsno=1073",),
+        allowed_path_prefixes=("/department/",),
+    )
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(fit_markdown="총게시물 : _27_ 건 페이지 : _1_ / 3"),
+        links={},
+    )
+
+    urls = _extract_pagination_urls(
+        url="https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&selfAt=Y",
+        result=result,
+        allowed_domains={"example.com"},
+        config=config,
+    )
+
+    assert urls == {
+        "https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&pageIndex=1&selfAt=Y",
+        "https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&pageIndex=2&selfAt=Y",
+        "https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&pageIndex=3&selfAt=Y",
+    }
+
+
+def test_within_page_limit_treats_zero_as_unlimited() -> None:
+    assert _within_page_limit({"https://example.com/1"}, max_pages=0)
+    assert not _within_page_limit({"https://example.com/1"}, max_pages=1)
 
 
 def test_html_url_priority_prefers_board_details() -> None:
