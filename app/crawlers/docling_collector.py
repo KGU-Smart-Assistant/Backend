@@ -37,6 +37,10 @@ class DoclingCollectorConfig:
     skip_unsupported: bool = False
     skip_images: bool = False
     skip_failed_conversions: bool = True
+    prefer_pdf_text_extraction: bool = True
+    enable_pdf_page_ocr: bool = True
+    pdf_ocr_max_pages: int = 30
+    pdf_ocr_scale: float = 1.0
     timeout_seconds: int = 10
 
 
@@ -74,6 +78,17 @@ def collect_documents_with_docling(
                 continue
             if source_type in {"hwp", "hwpx"}:
                 content = _extract_hwp_content(Path(local_source), source_type)
+            elif source_type == "pdf" and config.prefer_pdf_text_extraction:
+                content = _extract_pdf_text(Path(local_source))
+                if not content and config.enable_pdf_page_ocr:
+                    content = _extract_pdf_ocr_text(
+                        Path(local_source),
+                        max_pages=config.pdf_ocr_max_pages,
+                        scale=config.pdf_ocr_scale,
+                    )
+                if not content:
+                    result = converter.convert(local_source, headers=_request_headers(config.headers))
+                    content = result.document.export_to_markdown().strip()
             else:
                 result = converter.convert(local_source, headers=_request_headers(config.headers))
                 content = result.document.export_to_markdown().strip()
@@ -346,6 +361,96 @@ def _clean_hwp_text(text: str) -> str:
     text = re.sub(r"[ \t]+", " ", text)
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     return "\n".join(lines)
+
+
+def _extract_pdf_text(path: Path) -> str:
+    try:
+        import pypdfium2 as pdfium
+    except ImportError:
+        return ""
+
+    lines: List[str] = []
+    try:
+        pdf = pdfium.PdfDocument(str(path))
+    except Exception:
+        return ""
+
+    try:
+        for page in pdf:
+            try:
+                text_page = page.get_textpage()
+                text = text_page.get_text_range().strip()
+            except Exception:
+                continue
+            finally:
+                try:
+                    text_page.close()
+                except Exception:
+                    pass
+            if text:
+                lines.append(text)
+    finally:
+        try:
+            pdf.close()
+        except Exception:
+            pass
+
+    return "\n\n".join(lines)
+
+
+def _extract_pdf_ocr_text(path: Path, max_pages: int, scale: float) -> str:
+    try:
+        import pypdfium2 as pdfium
+        from rapidocr import RapidOCR
+    except ImportError:
+        return ""
+
+    lines: List[str] = []
+    try:
+        pdf = pdfium.PdfDocument(str(path))
+    except Exception:
+        return ""
+
+    try:
+        ocr = RapidOCR()
+        page_count = min(len(pdf), max_pages)
+        for page_index in range(page_count):
+            try:
+                page = pdf[page_index]
+                bitmap = page.render(scale=scale)
+                image = bitmap.to_numpy()
+                result = ocr(image)
+                page_text = _rapidocr_result_to_text(result)
+                if page_text:
+                    lines.append(page_text)
+            except Exception:
+                continue
+            finally:
+                for resource_name in ("bitmap", "page"):
+                    resource = locals().get(resource_name)
+                    try:
+                        resource.close()
+                    except Exception:
+                        pass
+    finally:
+        try:
+            pdf.close()
+        except Exception:
+            pass
+
+    return "\n\n".join(lines)
+
+
+def _rapidocr_result_to_text(result) -> str:
+    markdown = getattr(result, "to_markdown", None)
+    if callable(markdown):
+        text = markdown()
+        if text:
+            return text.strip()
+    texts = getattr(result, "txts", None)
+    if texts:
+        return "\n".join(text for text in texts if str(text).strip())
+    return ""
 
 
 def _extract_title(

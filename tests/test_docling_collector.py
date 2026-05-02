@@ -19,6 +19,16 @@ class _FailingConverter:
         raise RuntimeError("conversion failed")
 
 
+class _CountingConverter:
+    calls = 0
+
+    def convert(self, source, headers=None):
+        self.calls += 1
+        return SimpleNamespace(
+            document=SimpleNamespace(export_to_markdown=lambda: "# Fallback\ncontent")
+        )
+
+
 def test_collect_documents_with_docling_skips_images_when_configured(monkeypatch) -> None:
     monkeypatch.setattr(
         "app.crawlers.docling_collector._create_converter",
@@ -92,3 +102,73 @@ def test_collect_documents_with_docling_skips_failed_conversions(monkeypatch) ->
     documents = collect_documents_with_docling(["https://example.com/file.pdf"])
 
     assert documents == []
+
+
+def test_collect_documents_with_docling_uses_pdf_text_before_docling(
+    monkeypatch, tmp_path
+) -> None:
+    converter = _CountingConverter()
+    monkeypatch.setattr(
+        "app.crawlers.docling_collector._create_converter",
+        lambda: converter,
+    )
+    monkeypatch.setattr(
+        "app.crawlers.docling_collector._extract_pdf_text",
+        lambda path: "PDF text content",
+    )
+    pdf_path = tmp_path / "sample.pdf"
+    pdf_path.write_bytes(b"%PDF")
+
+    documents = collect_documents_with_docling([str(pdf_path)])
+
+    assert len(documents) == 1
+    assert documents[0].content == "PDF text content"
+    assert converter.calls == 0
+
+
+def test_collect_documents_with_docling_falls_back_to_docling_for_scanned_pdf(
+    monkeypatch, tmp_path
+) -> None:
+    converter = _CountingConverter()
+    monkeypatch.setattr(
+        "app.crawlers.docling_collector._create_converter",
+        lambda: converter,
+    )
+    monkeypatch.setattr(
+        "app.crawlers.docling_collector._extract_pdf_text",
+        lambda path: "",
+    )
+    pdf_path = tmp_path / "scan.pdf"
+    pdf_path.write_bytes(b"%PDF")
+
+    documents = collect_documents_with_docling([str(pdf_path)])
+
+    assert len(documents) == 1
+    assert documents[0].content == "# Fallback\ncontent"
+    assert converter.calls == 1
+
+
+def test_collect_documents_with_docling_uses_page_ocr_before_docling(
+    monkeypatch, tmp_path
+) -> None:
+    converter = _CountingConverter()
+    monkeypatch.setattr(
+        "app.crawlers.docling_collector._create_converter",
+        lambda: converter,
+    )
+    monkeypatch.setattr(
+        "app.crawlers.docling_collector._extract_pdf_text",
+        lambda path: "",
+    )
+    monkeypatch.setattr(
+        "app.crawlers.docling_collector._extract_pdf_ocr_text",
+        lambda path, max_pages, scale: "OCR text content",
+    )
+    pdf_path = tmp_path / "scan.pdf"
+    pdf_path.write_bytes(b"%PDF")
+
+    documents = collect_documents_with_docling([str(pdf_path)])
+
+    assert len(documents) == 1
+    assert documents[0].content == "OCR text content"
+    assert converter.calls == 0
