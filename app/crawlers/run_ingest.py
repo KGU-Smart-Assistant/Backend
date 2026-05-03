@@ -52,6 +52,12 @@ def embed_chunks(*args, **kwargs):
     return _embed_chunks(*args, **kwargs)
 
 
+def upsert_embedded_chunks(*args, **kwargs):
+    from app.db.vector_store import upsert_embedded_chunks as _upsert_embedded_chunks
+
+    return _upsert_embedded_chunks(*args, **kwargs)
+
+
 def load_sources_config(config_path: Path) -> List[Dict[str, Any]]:
     with config_path.open("r", encoding="utf-8") as file:
         config = yaml.safe_load(file) or {}
@@ -252,6 +258,11 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
         help="Skip embedding even if a source enables it.",
     )
     parser.add_argument(
+        "--store-vectors",
+        action="store_true",
+        help="Persist embedded chunks to the configured vector store.",
+    )
+    parser.add_argument(
         "--max-pages",
         type=int,
         help="Override per-source max_pages for this run.",
@@ -311,6 +322,9 @@ def apply_runtime_overrides(
 
 def main(argv: List[str] | None = None) -> None:
     args = parse_args([] if argv is None else argv)
+    if args.skip_embed and args.store_vectors:
+        raise ValueError("--store-vectors cannot be used together with --skip-embed.")
+
     config_path = Path(__file__).resolve().with_name("sources.yaml")
 
     sources = load_sources_config(config_path)
@@ -330,6 +344,7 @@ def main(argv: List[str] | None = None) -> None:
     total_documents = 0
     total_chunks = 0
     total_embedded_chunks = 0
+    total_stored_chunks = 0
     source_reports: List[Dict[str, Any]] = []
     source_status_counts: Dict[str, int] = {}
 
@@ -346,6 +361,7 @@ def main(argv: List[str] | None = None) -> None:
         documents = dedup_result.documents
         chunks = chunk_documents(documents, chunk_size=1000, chunk_overlap=200)
         embedded_count = 0
+        stored_count = 0
 
         if source.get("embed", True) and chunks:
             embedding_limit = source.get("embedding_limit")
@@ -353,6 +369,13 @@ def main(argv: List[str] | None = None) -> None:
             embedded_chunks = embed_chunks(target_chunks)
             embedded_count = len(embedded_chunks)
             total_embedded_chunks += embedded_count
+            if args.store_vectors and embedded_chunks:
+                stored_count = upsert_embedded_chunks(
+                    embedded_chunks,
+                    category=source.get("category"),
+                    department=source.get("department"),
+                )
+                total_stored_chunks += stored_count
 
         total_documents += len(documents)
         total_chunks += len(chunks)
@@ -379,6 +402,7 @@ def main(argv: List[str] | None = None) -> None:
                 "version_duplicates_removed": dedup_result.version_duplicates_removed,
                 "chunks": len(chunks),
                 "embedded_chunks": embedded_count,
+                "stored_chunks": stored_count,
                 "status": source_summary["status"],
                 "status_reason": source_summary["reason"],
             }
@@ -389,13 +413,14 @@ def main(argv: List[str] | None = None) -> None:
             f"documents={len(documents)} "
             f"exact_duplicates_removed={dedup_result.exact_duplicates_removed} "
             f"version_duplicates_removed={dedup_result.version_duplicates_removed} "
-            f"chunks={len(chunks)} embedded_chunks={embedded_count} "
+            f"chunks={len(chunks)} embedded_chunks={embedded_count} stored_chunks={stored_count} "
             f"status={source_summary['status']}"
         )
 
     print(f"total_documents={total_documents}")
     print(f"total_chunks={total_chunks}")
     print(f"total_embedded_chunks={total_embedded_chunks}")
+    print(f"total_stored_chunks={total_stored_chunks}")
 
     report = {
         "generated_at": datetime.now().isoformat(),
@@ -403,6 +428,7 @@ def main(argv: List[str] | None = None) -> None:
         "total_documents": total_documents,
         "total_chunks": total_chunks,
         "total_embedded_chunks": total_embedded_chunks,
+        "total_stored_chunks": total_stored_chunks,
         "source_status_counts": source_status_counts,
         "sources": source_reports,
     }

@@ -76,6 +76,7 @@ def test_run_ingest_executes_end_to_end_pipeline(monkeypatch, capsys) -> None:
         lambda _: documents,
     )
     monkeypatch.setattr(run_ingest, "embed_chunks", lambda chunks: [object() for _ in chunks])
+    monkeypatch.setattr(run_ingest, "upsert_embedded_chunks", lambda chunks, **_: len(chunks))
     monkeypatch.setattr(run_ingest, "default_report_output_dir", lambda: Path(".tmp/test-reports"))
     monkeypatch.setattr(
         run_ingest,
@@ -89,11 +90,12 @@ def test_run_ingest_executes_end_to_end_pipeline(monkeypatch, capsys) -> None:
     assert "[academic_notices] raw_documents=3 documents=2" in captured.out
     assert "exact_duplicates_removed=1" in captured.out
     assert "version_duplicates_removed=0" in captured.out
-    assert "chunks=4 embedded_chunks=2" in captured.out
+    assert "chunks=4 embedded_chunks=2 stored_chunks=0" in captured.out
     assert "status=ok" in captured.out
     assert "total_documents=2" in captured.out
     assert "total_chunks=4" in captured.out
     assert "total_embedded_chunks=2" in captured.out
+    assert "total_stored_chunks=0" in captured.out
     assert "ingest_report=.tmp\\test-reports\\ingest-report-test.json" in captured.out
 
 
@@ -369,3 +371,53 @@ def test_run_ingest_main_reports_no_matching_sources(monkeypatch, capsys) -> Non
 
     captured = capsys.readouterr()
     assert "No sources matched the requested filters." in captured.out
+
+
+def test_run_ingest_main_stores_embedded_chunks_when_requested(monkeypatch, capsys) -> None:
+    now = datetime(2026, 4, 10, 12, 0, 0)
+    source_config = [
+        {
+            "name": "alpha_notice",
+            "seed_urls": ["https://example.com/notices"],
+            "category": "academic",
+            "department": "academic_affairs",
+            "max_pages": 20,
+            "max_pagination_pages": 200,
+            "embed": True,
+        }
+    ]
+    documents = [
+        _build_document(
+            doc_id="unique",
+            source_url="https://example.com/notices/1",
+            title="Academic Notice",
+            content="long-notice-" * 120,
+            collected_at=now,
+        )
+    ]
+
+    monkeypatch.setattr(run_ingest, "load_sources_config", lambda _: source_config)
+    monkeypatch.setattr(run_ingest, "collect_documents_with_crawl4ai", lambda _: documents)
+    monkeypatch.setattr(run_ingest, "embed_chunks", lambda chunks: [object() for _ in chunks])
+    monkeypatch.setattr(run_ingest, "upsert_embedded_chunks", lambda chunks, **_: len(chunks))
+    monkeypatch.setattr(run_ingest, "default_report_output_dir", lambda: Path(".tmp/test-reports"))
+    monkeypatch.setattr(
+        run_ingest,
+        "write_ingest_report",
+        lambda report, output_dir: output_dir / "ingest-report-test.json",
+    )
+
+    run_ingest.main(["--source", "alpha_notice", "--store-vectors"])
+
+    captured = capsys.readouterr()
+    assert "stored_chunks=2" in captured.out
+    assert "total_stored_chunks=2" in captured.out
+
+
+def test_run_ingest_main_rejects_store_vectors_with_skip_embed() -> None:
+    try:
+        run_ingest.main(["--skip-embed", "--store-vectors"])
+    except ValueError as exc:
+        assert str(exc) == "--store-vectors cannot be used together with --skip-embed."
+    else:
+        raise AssertionError("Expected ValueError for incompatible CLI options.")
