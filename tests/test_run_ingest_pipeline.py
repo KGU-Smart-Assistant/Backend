@@ -96,7 +96,8 @@ def test_run_ingest_executes_end_to_end_pipeline(monkeypatch, capsys) -> None:
     assert "total_chunks=4" in captured.out
     assert "total_embedded_chunks=2" in captured.out
     assert "total_stored_chunks=0" in captured.out
-    assert "ingest_report=.tmp\\test-reports\\ingest-report-test.json" in captured.out
+    normalized_output = captured.out.replace("\\", "/")
+    assert "ingest_report=.tmp/test-reports/ingest-report-test.json" in normalized_output
 
 
 def test_load_sources_config_expands_generated_sources() -> None:
