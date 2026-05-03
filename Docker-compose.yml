@@ -11,6 +11,10 @@ services:
       - .:/app
     env_file:
       - .env
+    environment:
+      VECTOR_STORE_MODE: http
+      VECTOR_STORE_HOST: chroma
+      VECTOR_STORE_PORT: 8000
     depends_on:
       - db
       - chroma
