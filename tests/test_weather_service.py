@@ -7,6 +7,11 @@ from app.services import weather_service
 
 def test_weather_service_fetches_open_meteo_and_builds_context(monkeypatch) -> None:
     captured = {}
+    forecast_date = (
+        weather_service.datetime.now(weather_service._TIMEZONE).date()
+        + weather_service.timedelta(days=1)
+    )
+    forecast_date_text = forecast_date.isoformat()
 
     class FakeResponse:
         def raise_for_status(self) -> None:
@@ -15,13 +20,13 @@ def test_weather_service_fetches_open_meteo_and_builds_context(monkeypatch) -> N
         def json(self) -> dict:
             return {
                 "daily": {
-                    "time": ["2026-04-29", "2026-04-30"],
-                    "weather_code": [3, 61],
-                    "temperature_2m_max": [20.0, 18.0],
-                    "temperature_2m_min": [10.0, 9.0],
-                    "precipitation_probability_max": [20, 80],
-                    "precipitation_sum": [0.0, 4.2],
-                    "wind_speed_10m_max": [12.0, 18.0],
+                    "time": [forecast_date_text],
+                    "weather_code": [61],
+                    "temperature_2m_max": [18.0],
+                    "temperature_2m_min": [9.0],
+                    "precipitation_probability_max": [80],
+                    "precipitation_sum": [4.2],
+                    "wind_speed_10m_max": [18.0],
                 }
             }
 
@@ -38,7 +43,7 @@ def test_weather_service_fetches_open_meteo_and_builds_context(monkeypatch) -> N
 
     monkeypatch.setattr(weather_service.requests, "get", fake_get)
     monkeypatch.setattr(weather_service, "get_gemini_response_with_context", fake_answer)
-    monkeypatch.setattr(weather_service, "_extract_forecast_window", lambda _: (weather_service.date(2026, 4, 30), 1))
+    monkeypatch.setattr(weather_service, "_extract_forecast_window", lambda _: (forecast_date, 1))
 
     report = weather_service.get_weather_response("내일 수원 날씨 알려줘")
 
@@ -47,6 +52,6 @@ def test_weather_service_fetches_open_meteo_and_builds_context(monkeypatch) -> N
     assert captured["url"] == "https://api.open-meteo.com/v1/forecast"
     assert captured["params"]["timezone"] == "Asia/Seoul"
     assert captured["params"]["latitude"] == 37.2636
-    assert "2026-04-30" in captured["context"]
+    assert forecast_date_text in captured["context"]
     assert "약한 비" in captured["context"]
     assert "precipitation probability 80%" in captured["context"]
