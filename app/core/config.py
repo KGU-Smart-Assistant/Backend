@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     kakao_rest_api_key: str | None = None
     kakao_map_api_key: str | None = None
     kakao_local_base_url: str = "https://dapi.kakao.com"
+    database_url: str = "sqlite:///./app.db"
     google_api_key: str # 키 추가
     model_config = SettingsConfigDict(
         env_file=".env",
