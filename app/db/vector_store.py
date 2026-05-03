@@ -98,6 +98,17 @@ def _create_client():
             "chromadb is not installed. Install it before using vector storage."
         ) from exc
 
+    mode = settings.vector_store_mode.lower()
+    if mode == "http":
+        return chromadb.HttpClient(
+            host=settings.vector_store_host,
+            port=settings.vector_store_port,
+        )
+    if mode != "embedded":
+        raise ValueError(
+            "VECTOR_STORE_MODE must be either 'embedded' or 'http'."
+        )
+
     persist_dir = Path(settings.vector_store_path)
     persist_dir.mkdir(parents=True, exist_ok=True)
     return chromadb.PersistentClient(path=str(persist_dir))
