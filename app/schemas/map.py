@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -8,7 +10,7 @@ class KakaoSearchMeta(BaseModel):
 
 
 class KakaoPlace(BaseModel):
-    id: str
+    id: str | None = None
     place_name: str
     category_name: str | None = None
     address_name: str | None = None
@@ -35,3 +37,9 @@ class KakaoAddress(BaseModel):
 class KakaoAddressSearchResponse(BaseModel):
     meta: KakaoSearchMeta
     documents: list[KakaoAddress]
+
+
+class MapNavigationResponse(BaseModel):
+    origin: KakaoPlace
+    destination: KakaoPlace
+    directions: dict[str, Any]
