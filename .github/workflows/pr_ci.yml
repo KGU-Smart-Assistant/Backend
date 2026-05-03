@@ -28,5 +28,6 @@ jobs:
         env:
           PYTHONUTF8: "1"
           PYTHONIOENCODING: "utf-8"
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || 'ci-test-key' }}
         run: |
           python -m pytest
