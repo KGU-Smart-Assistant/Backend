@@ -118,6 +118,11 @@ There are currently no official DB initialization, migration, or seed commands.
 - Open PRs into `develop`
 - Do not work directly on `main`
 - Current CI is expected to run for PRs targeting `develop`
+- Before opening or updating a PR, run `git status --short` and review the staged diff.
+- Only stage files that are directly related to the requested task.
+- Do not include unrelated local edits in a PR. If unrelated edits already exist, leave them unstaged and mention them in the final response.
+- If a PR branch has conflicts with `develop`, resolve the conflicts on the PR branch and push the branch update. Do not merge the PR unless explicitly requested.
+- Prefer `git push --force-with-lease` after a rebase; do not use unsafe force pushes.
 
 Branch naming examples:
 - `feature/<task-name>`
@@ -129,6 +134,16 @@ Commit message convention:
 - `feat: add search request validation`
 - `fix: handle gemini timeout safely`
 - `refactor: simplify chunking pipeline flow`
+
+## Local Files and PR Safety Rules
+- Never commit real local configuration files such as `.env`, `.env.*`, `.envrc`, local IDE settings, shell profiles, or machine-specific paths.
+- Never commit secrets, API keys, tokens, passwords, cookies, private certificates, or generated credentials.
+- Never commit local runtime data such as `app.db`, SQLite journals, database dumps, local vector-store files, crawler output, cache folders, logs, or temporary files unless the task explicitly requires a reviewed fixture.
+- Treat generated local folders such as `.tmp/`, `.crawl4ai-data/`, `.pytest_cache/`, `__pycache__/`, `servers/`, `venv/`, and `.venv/` as non-PR files.
+- Before committing, check `git diff --cached --name-only` and verify that no personal local files or unrelated files are staged.
+- If a tracked file contains local-only data, do not modify or stage it for a PR without explicit approval.
+- Use `.env.example` for documented configuration keys and safe placeholder values only. Do not copy real `.env` values into examples, docs, tests, or PR descriptions.
+- CI-only secrets must come from GitHub Actions secrets or harmless dummy values. Do not encode real credentials in workflow files.
 
 ## API Rules
 - Follow the existing FastAPI router structure.
