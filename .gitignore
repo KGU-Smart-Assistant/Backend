@@ -149,6 +149,7 @@ env.bak/
 venv.bak/
 .crawl4ai-data/
 .tmp/
+servers/
 
 # Spyder project settings
 .spyderproject
