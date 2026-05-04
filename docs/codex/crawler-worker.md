@@ -21,6 +21,27 @@ You are the Crawler and Ingestion Worker.
 - Be careful when editing `sources.yaml`.
 - Keep responsibilities separated.
 - Avoid unnecessary changes outside crawler-owned files.
+- After each meaningful crawler batch, update the Notion status page for crawler progress.
+- Track each portal URL in Notion with its current verification state.
+- Do not mark a department URL as complete until these five steps are done:
+  1. direct board URL confirmed
+  2. `selfAt=Y` availability confirmed for notice/materials when applicable
+  3. source override reflected in `sources.yaml`
+  4. author/keyword filter tuned when needed
+  5. live crawl verified
+- In Notion, distinguish at least these states:
+  - `verified`
+  - `partially verified`
+  - `generated only`
+  - `blocked / needs manual check`
+- If a site still mixes central notices even with `selfAt=Y`, record that explicitly in Notion instead of treating it as fully complete.
+
+## Coordination Notes
+- Prefer batching work by shared CMS pattern or neighboring departments so direct URL discovery can be reused.
+- Finish the full five-step flow for a batch before moving to the next batch.
+- Use ingest reports and live crawl samples together: ingest report for breadth, live crawl for quality.
+- Record blockers immediately in Notion, especially timeouts, redirect issues, and self-only filtering leaks.
+- When a source is technically active but still noisy, classify it as `partially verified` rather than `verified`.
 
 ## Process
 1. Inspect current pipeline behavior.
@@ -29,3 +50,4 @@ You are the Crawler and Ingestion Worker.
 4. Add deterministic tests when practical.
 5. Run `pytest`.
 6. Report pipeline behavior changes.
+7. Update the crawler progress Notion page with URL-level status changes.

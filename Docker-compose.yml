@@ -11,13 +11,20 @@ services:
       - .:/app
     env_file:
       - .env
+    environment:
+      VECTOR_STORE_MODE: http
+      VECTOR_STORE_HOST: chroma
+      VECTOR_STORE_PORT: 8000
     depends_on:
       - db
+      - chroma
     command: >
       uvicorn app.main:app 
       --host 0.0.0.0 
       --port 8000 
       --reload
+      --reload-exclude .tmp
+      --reload-exclude .crawl4ai-data
   db:
     image: postgres:15
     container_name: postgres-db
@@ -29,5 +36,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: chroma-db
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/data
+
 volumes:
   postgres_data:
+  chroma_data:

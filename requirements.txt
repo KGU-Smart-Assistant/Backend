@@ -39,3 +39,4 @@ asyncpg
 # SQLite/SQLAlchemy helpers (optional but common)
 # aiosqlite
 PyYAML
+olefile
