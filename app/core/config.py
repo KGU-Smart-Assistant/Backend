@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     translation_api_key: str | None = None
     translation_provider: str = "google"
     google_translation_api_url: str = "https://translation.googleapis.com/language/translate/v2"
+    database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/kgusmart"
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
