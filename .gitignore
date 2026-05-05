@@ -62,6 +62,9 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+app.db
+*.sqlite
+*.sqlite3
 
 # Flask stuff:
 instance/
@@ -149,6 +152,7 @@ env.bak/
 venv.bak/
 .crawl4ai-data/
 .tmp/
+.pytest_tmp/
 servers/
 
 # Spyder project settings
