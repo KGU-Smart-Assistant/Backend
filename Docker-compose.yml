@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   
   backend:
@@ -37,12 +35,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   chroma:
-    image: chromadb/chroma:latest
+    image: chromadb/chroma:1.5.3
     container_name: chroma-db
     ports:
       - "8001:8000"
     volumes:
       - chroma_data:/data
+      - ./chroma.docker.yaml:/chroma/config.yaml:ro
+    environment:
+      CONFIG_PATH: /chroma/config.yaml
 
 volumes:
   postgres_data:

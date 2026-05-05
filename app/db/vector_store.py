@@ -128,6 +128,8 @@ def _build_chunk_metadata(
         "source_url": chunk.source_url,
         "embedding_model": chunk.embedding_model,
     }
+    if chunk.published_at:
+        metadata["published_at"] = chunk.published_at.isoformat()
     if category:
         metadata["category"] = category
     if department:

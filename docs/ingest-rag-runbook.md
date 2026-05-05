@@ -16,6 +16,12 @@ curl http://localhost:8000/api/v1/health
 curl http://localhost:8001/api/v2/heartbeat
 ```
 
+Apply PostgreSQL migrations:
+
+```bash
+docker compose exec backend alembic upgrade head
+```
+
 The backend uses Chroma server mode in Docker Compose:
 
 ```env
@@ -24,11 +30,13 @@ VECTOR_STORE_HOST=chroma
 VECTOR_STORE_PORT=8000
 ```
 
-Chroma data is stored in the Docker volume `chroma_data`.
+The Chroma container uses `chroma.docker.yaml`, listens on port `8000` inside Docker, and persists index data under `/data`.
+That directory is backed by the Docker volume `chroma_data`.
 
 ## Scoped Ingest
 
-Do not run the full source list as the first validation step. The full ingest can take a long time because pagination, attachments, ZIP extraction, HWP/HWPX parsing, and OCR can all run in one batch.
+Do not run the full source list as the first validation step.
+The full ingest can take a long time because pagination, attachments, ZIP extraction, HWP/HWPX parsing, and OCR can all run in one batch.
 
 Run one source at a time:
 
@@ -49,10 +57,12 @@ Useful options:
 --skip-embed                 Crawl, deduplicate, and chunk without embedding.
 --max-pages <n>              Override crawler max_pages for this run.
 --max-pagination-pages <n>   Override pagination page limit for this run.
+--store-db                   Store source, documents, chunks, attachments, and ingest reports in PostgreSQL.
 --store-vectors              Store embedded chunks in Chroma.
 ```
 
-`--store-vectors` requires embedding. Do not combine it with `--skip-embed`.
+`--store-vectors` requires embedding.
+Do not combine it with `--skip-embed`.
 
 Reports are written to:
 
@@ -82,6 +92,23 @@ docker compose exec backend python -m app.crawlers.run_ingest \
   --store-vectors
 ```
 
+PostgreSQL plus Chroma storage validation:
+
+```bash
+docker compose exec backend python -m app.crawlers.run_ingest \
+  --source youth_studies_notice \
+  --max-pages 5 \
+  --max-pagination-pages 2 \
+  --store-db \
+  --store-vectors
+```
+
+The storage flow is:
+
+```text
+crawl -> deduplicate -> chunk -> PostgreSQL upsert -> embed -> Chroma upsert
+```
+
 Check Chroma count from the backend container:
 
 ```bash
@@ -95,21 +122,21 @@ Call vector search through the backend:
 ```bash
 curl -X POST http://localhost:8000/api/v1/search \
   -H "Content-Type: application/json" \
-  -d "{\"query\":\"청소년학과 공지\",\"top_k\":2,\"category\":\"notice\"}"
+  -d "{\"query\":\"youth studies notice\",\"top_k\":2,\"category\":\"notice\"}"
 ```
 
 Expected shape:
 
 ```json
 {
-  "query": "청소년학과 공지",
+  "query": "youth studies notice",
   "results": [
     {
       "chunk_id": "...",
       "doc_id": "...",
       "score": 0.64,
       "text": "...",
-      "title": "2026학년도 1학기 성적향상장학금 신청 안내",
+      "title": "...",
       "source_url": "..."
     }
   ]
@@ -118,15 +145,22 @@ Expected shape:
 
 ## Chat RAG
 
-General chat intent uses vector search before asking Gemini to answer. Map and phone intents still use the existing DB-backed services.
+General chat intent uses vector search before asking Gemini to answer.
+Map and phone intents still use the existing DB-backed services.
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/chat/chat \
   -H "Content-Type: application/json" \
-  -d "{\"message\":\"성적향상장학금 신청 안내 알려줘\"}"
+  -d "{\"message\":\"summarize the latest youth studies notice\"}"
 ```
 
-RAG answers include source URLs. If retrieved chunks do not contain enough detail, the answer should say what can be verified and point to the source instead of inventing missing details.
+RAG answers include source URLs.
+If retrieved chunks do not contain enough detail, the answer should say what can be verified and point to the source instead of inventing missing details.
+
+## Storage Boundary
+
+Use PostgreSQL as the canonical store for crawled document lifecycle data and Chroma as the semantic retrieval index.
+See `docs/storage-boundary.md` for the detailed split.
 
 ## Known Slow Source
 

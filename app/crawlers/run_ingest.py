@@ -58,6 +58,17 @@ def upsert_embedded_chunks(*args, **kwargs):
     return _upsert_embedded_chunks(*args, **kwargs)
 
 
+def store_ingest_source_result(*args, **kwargs):
+    from app.db.crawler_store import (
+        store_ingest_source_result as _store_ingest_source_result,
+    )
+    from app.db.session import SessionLocal, init_db
+
+    init_db()
+    with SessionLocal() as db:
+        return _store_ingest_source_result(db, *args, **kwargs)
+
+
 def load_sources_config(config_path: Path) -> List[Dict[str, Any]]:
     with config_path.open("r", encoding="utf-8") as file:
         config = yaml.safe_load(file) or {}
@@ -263,6 +274,11 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
         help="Persist embedded chunks to the configured vector store.",
     )
     parser.add_argument(
+        "--store-db",
+        action="store_true",
+        help="Persist crawled documents, chunks, attachments, and ingest reports to PostgreSQL.",
+    )
+    parser.add_argument(
         "--max-pages",
         type=int,
         help="Override per-source max_pages for this run.",
@@ -325,6 +341,7 @@ def main(argv: List[str] | None = None) -> None:
     if args.skip_embed and args.store_vectors:
         raise ValueError("--store-vectors cannot be used together with --skip-embed.")
 
+    run_id = datetime.now().strftime("%Y%m%d%H%M%S")
     config_path = Path(__file__).resolve().with_name("sources.yaml")
 
     sources = load_sources_config(config_path)
@@ -345,10 +362,13 @@ def main(argv: List[str] | None = None) -> None:
     total_chunks = 0
     total_embedded_chunks = 0
     total_stored_chunks = 0
+    total_db_documents = 0
+    total_db_chunks = 0
     source_reports: List[Dict[str, Any]] = []
     source_status_counts: Dict[str, int] = {}
 
     for configured_source in sources:
+        source_started_at = datetime.now()
         source = apply_runtime_overrides(
             configured_source,
             skip_embed=args.skip_embed,
@@ -390,23 +410,39 @@ def main(argv: List[str] | None = None) -> None:
         source_status_counts[source_summary["status"]] = (
             source_status_counts.get(source_summary["status"], 0) + 1
         )
-        source_reports.append(
-            {
-                "name": source["name"],
-                "category": source.get("category"),
-                "department": source.get("department"),
-                "seed_urls": source["seed_urls"],
-                "raw_documents": dedup_result.total_input,
-                "documents": len(documents),
-                "exact_duplicates_removed": dedup_result.exact_duplicates_removed,
-                "version_duplicates_removed": dedup_result.version_duplicates_removed,
-                "chunks": len(chunks),
-                "embedded_chunks": embedded_count,
-                "stored_chunks": stored_count,
-                "status": source_summary["status"],
-                "status_reason": source_summary["reason"],
-            }
-        )
+        source_report = {
+            "name": source["name"],
+            "category": source.get("category"),
+            "department": source.get("department"),
+            "seed_urls": source["seed_urls"],
+            "raw_documents": dedup_result.total_input,
+            "documents": len(documents),
+            "exact_duplicates_removed": dedup_result.exact_duplicates_removed,
+            "version_duplicates_removed": dedup_result.version_duplicates_removed,
+            "chunks": len(chunks),
+            "embedded_chunks": embedded_count,
+            "stored_chunks": stored_count,
+            "db_documents": 0,
+            "db_chunks": 0,
+            "status": source_summary["status"],
+            "status_reason": source_summary["reason"],
+        }
+        if args.store_db:
+            stored_db = store_ingest_source_result(
+                run_id=run_id,
+                source=source,
+                documents=documents,
+                chunks=chunks,
+                source_report=source_report,
+                started_at=source_started_at,
+                completed_at=datetime.now(),
+            )
+            source_report["db_documents"] = stored_db["documents"]
+            source_report["db_chunks"] = stored_db["chunks"]
+            total_db_documents += stored_db["documents"]
+            total_db_chunks += stored_db["chunks"]
+
+        source_reports.append(source_report)
 
         print(
             f"[{source['name']}] raw_documents={dedup_result.total_input} "
@@ -414,6 +450,7 @@ def main(argv: List[str] | None = None) -> None:
             f"exact_duplicates_removed={dedup_result.exact_duplicates_removed} "
             f"version_duplicates_removed={dedup_result.version_duplicates_removed} "
             f"chunks={len(chunks)} embedded_chunks={embedded_count} stored_chunks={stored_count} "
+            f"db_documents={source_report['db_documents']} db_chunks={source_report['db_chunks']} "
             f"status={source_summary['status']}"
         )
 
@@ -421,14 +458,19 @@ def main(argv: List[str] | None = None) -> None:
     print(f"total_chunks={total_chunks}")
     print(f"total_embedded_chunks={total_embedded_chunks}")
     print(f"total_stored_chunks={total_stored_chunks}")
+    print(f"total_db_documents={total_db_documents}")
+    print(f"total_db_chunks={total_db_chunks}")
 
     report = {
         "generated_at": datetime.now().isoformat(),
+        "run_id": run_id,
         "source_count": len(sources),
         "total_documents": total_documents,
         "total_chunks": total_chunks,
         "total_embedded_chunks": total_embedded_chunks,
         "total_stored_chunks": total_stored_chunks,
+        "total_db_documents": total_db_documents,
+        "total_db_chunks": total_db_chunks,
         "source_status_counts": source_status_counts,
         "sources": source_reports,
     }

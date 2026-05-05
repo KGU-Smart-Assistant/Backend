@@ -1,5 +1,23 @@
 """Application data models."""
 
-from .models import Base, KguContact, KguPlace
+from .models import (
+    Base,
+    CrawlerAttachment,
+    CrawlerDocument,
+    CrawlerDocumentChunk,
+    CrawlerIngestRun,
+    CrawlerSource,
+    KguContact,
+    KguPlace,
+)
 
-__all__ = ["Base", "KguContact", "KguPlace"]
+__all__ = [
+    "Base",
+    "CrawlerAttachment",
+    "CrawlerDocument",
+    "CrawlerDocumentChunk",
+    "CrawlerIngestRun",
+    "CrawlerSource",
+    "KguContact",
+    "KguPlace",
+]
