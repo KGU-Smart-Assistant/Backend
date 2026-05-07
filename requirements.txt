@@ -1,6 +1,5 @@
 # FastAPI 서버
 fastapi
-uvicorn
 uvicorn[standard]
 # 환경 변수 관리
 python-dotenv
@@ -13,19 +12,14 @@ requests
 httpx
 
 # 크롤링
-selenium
 beautifulsoup4
 
 # AI / RAG
-openai
-tiktoken
-langchain
 chromadb
 docling
 crawl4ai
 
 # 테스트
-pytest
 pydantic-settings
 
 
@@ -36,10 +30,8 @@ google-genai
 SQLAlchemy
 Alembic
 psycopg2-binary
-asyncpg
 # SQLite/SQLAlchemy helpers (optional but common)
 # aiosqlite
 PyYAML
 olefile
 ftfy
-charset-normalizer

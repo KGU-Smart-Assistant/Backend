@@ -1,5 +1,9 @@
 defaults:
+  recent_documents: &recent_documents
+    min_published_year: 2018
+
   portal_notice: &portal_notice
+    <<: *recent_documents
     category: notice
     max_pages: 0
     max_depth: 2
@@ -23,6 +27,7 @@ defaults:
     attachment_embedding_limit: 100
 
   portal_materials: &portal_materials
+    <<: *recent_documents
     category: materials
     max_pages: 0
     max_depth: 2
@@ -46,10 +51,11 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 100
+    embedding_limit: 150
     attachment_embedding_limit: 200
 
   portal_faq: &portal_faq
+    <<: *recent_documents
     category: faq
     max_pages: 0
     max_depth: 2
@@ -69,9 +75,10 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 100
+    embedding_limit: 150
 
   portal_schedule: &portal_schedule
+    <<: *recent_documents
     category: academic_schedule
     max_pages: 3
     max_depth: 1
@@ -89,9 +96,10 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 50
+    embedding_limit: 150
 
   external_notice: &external_notice
+    <<: *recent_documents
     category: notice
     max_pages: 0
     max_depth: 2
@@ -114,11 +122,12 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 100
+    embedding_limit: 150
     attachment_embedding_limit: 100
 
 sources:
   - name: academic_schedule
+    <<: *recent_documents
     category: academic_schedule
     department: university
     seed_urls:
@@ -130,9 +139,10 @@ sources:
     collect_patterns:
       - "selecttnschafsschdullistus.do"
     embed: true
-    embedding_limit: 20
+    embedding_limit: 150
 
   - name: graduation_requirements
+    <<: *recent_documents
     category: graduation
     department: university
     seed_urls:
@@ -144,9 +154,10 @@ sources:
     collect_patterns:
       - "contents.do"
     embed: true
-    embedding_limit: 20
+    embedding_limit: 150
 
   - name: university_notices
+    <<: *recent_documents
     category: notice
     department: university
     seed_urls:
@@ -174,6 +185,7 @@ sources:
     attachment_embedding_limit: 200
 
   - name: scholarship_support
+    <<: *recent_documents
     category: support
     department: scholarship_support
     seed_urls:
@@ -203,6 +215,7 @@ sources:
     attachment_embedding_limit: 200
 
   - name: student_life
+    <<: *recent_documents
     category: student_life
     department: university
     seed_urls:
@@ -214,9 +227,10 @@ sources:
     collect_patterns:
       - "contents.do"
     embed: true
-    embedding_limit: 20
+    embedding_limit: 150
 
   - name: career_support
+    <<: *recent_documents
     category: career
     department: university
     seed_urls:
@@ -228,7 +242,7 @@ sources:
     collect_patterns:
       - "contents.do"
     embed: true
-    embedding_limit: 20
+    embedding_limit: 150
 
   - name: electrical_engineering_shared_notice
     department: electrical_engineering_shared

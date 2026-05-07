@@ -107,7 +107,6 @@ python -m pytest
 
 Check available Gemini models:
 ```bash
-python -m app.utils.test_model
 ```
 
 Apply DB migrations:

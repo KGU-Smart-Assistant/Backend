@@ -1,9 +1,11 @@
 import hashlib
 import re
+import signal
 import tempfile
 import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 from urllib.parse import unquote, urlparse
@@ -21,6 +23,7 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".gif", ".
 HTML_EXTENSIONS = {".html", ".htm"}
 MARKDOWN_EXTENSIONS = {".md", ".markdown"}
 DOCLING_EXTENSIONS = {".pdf", ".docx", *IMAGE_EXTENSIONS, *HTML_EXTENSIONS, *MARKDOWN_EXTENSIONS}
+SUPPORTED_DOWNLOAD_SUFFIXES = DOCLING_EXTENSIONS | HWP_EXTENSIONS | ARCHIVE_EXTENSIONS
 DEFAULT_REQUEST_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -38,10 +41,13 @@ class DoclingCollectorConfig:
     skip_images: bool = False
     skip_failed_conversions: bool = True
     prefer_pdf_text_extraction: bool = True
+    pdf_text_max_pages: int = 30
     enable_pdf_page_ocr: bool = True
     pdf_ocr_max_pages: int = 30
     pdf_ocr_scale: float = 1.0
     timeout_seconds: int = 10
+    conversion_timeout_seconds: int = 45
+    max_zip_member_bytes: int = 25 * 1024 * 1024
 
 
 def collect_documents_with_docling(
@@ -55,7 +61,7 @@ def collect_documents_with_docling(
     documents: List[Document] = []
 
     for source in sources:
-        temp_dir = tempfile.TemporaryDirectory()
+        temp_dir = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         try:
             local_source = _materialize_source(source, config, Path(temp_dir.name))
             source_type = _infer_source_type(
@@ -64,6 +70,8 @@ def collect_documents_with_docling(
                 timeout_seconds=config.timeout_seconds,
             )
             if source_type == "image" and config.skip_images:
+                continue
+            if source_type == "file":
                 continue
             if source_type == "zip":
                 documents.extend(
@@ -79,18 +87,35 @@ def collect_documents_with_docling(
             if source_type in {"hwp", "hwpx"}:
                 content = _extract_hwp_content(Path(local_source), source_type)
             elif source_type == "pdf" and config.prefer_pdf_text_extraction:
-                content = _extract_pdf_text(Path(local_source))
+                content = _run_with_timeout(
+                    _extract_pdf_text,
+                    Path(local_source),
+                    timeout_seconds=config.conversion_timeout_seconds,
+                    max_pages=config.pdf_text_max_pages,
+                )
                 if not content and config.enable_pdf_page_ocr:
-                    content = _extract_pdf_ocr_text(
+                    content = _run_with_timeout(
+                        _extract_pdf_ocr_text,
                         Path(local_source),
+                        timeout_seconds=config.conversion_timeout_seconds,
                         max_pages=config.pdf_ocr_max_pages,
                         scale=config.pdf_ocr_scale,
                     )
                 if not content:
-                    result = converter.convert(local_source, headers=_request_headers(config.headers))
+                    result = _run_with_timeout(
+                        converter.convert,
+                        local_source,
+                        timeout_seconds=config.conversion_timeout_seconds,
+                        headers=_request_headers(config.headers),
+                    )
                     content = result.document.export_to_markdown().strip()
             else:
-                result = converter.convert(local_source, headers=_request_headers(config.headers))
+                result = _run_with_timeout(
+                    converter.convert,
+                    local_source,
+                    timeout_seconds=config.conversion_timeout_seconds,
+                    headers=_request_headers(config.headers),
+                )
                 content = result.document.export_to_markdown().strip()
         except ValueError:
             if config.skip_unsupported:
@@ -136,13 +161,38 @@ def collect_documents_with_docling(
 
 def _create_converter():
     try:
-        from docling.document_converter import DocumentConverter
+        from docling.document_converter import DocumentConverter, InputFormat, PdfFormatOption
+        from docling.datamodel.pipeline_options import PdfPipelineOptions, RapidOcrOptions
     except ImportError as exc:
         raise RuntimeError(
             "Docling is not installed. Add 'docling' to dependencies and install it first."
         ) from exc
 
-    return DocumentConverter()
+    pdf_options = PdfPipelineOptions()
+    pdf_options.ocr_options = RapidOcrOptions()
+    return DocumentConverter(
+        format_options={
+            InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options),
+        },
+    )
+
+
+def _run_with_timeout(func, *args, timeout_seconds: int, **kwargs):
+    if timeout_seconds <= 0 or not hasattr(signal, "SIGALRM"):
+        return func(*args, **kwargs)
+
+    def _raise_timeout(signum, frame):
+        raise TimeoutError(f"{func.__name__} exceeded {timeout_seconds} seconds")
+
+    previous_handler = signal.signal(signal.SIGALRM, _raise_timeout)
+    previous_timer = signal.setitimer(signal.ITIMER_REAL, timeout_seconds)
+    try:
+        return func(*args, **kwargs)
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+        if previous_timer[0] > 0:
+            signal.setitimer(signal.ITIMER_REAL, previous_timer[0], previous_timer[1])
 
 
 def _materialize_source(source: str, config: DoclingCollectorConfig, temp_dir: Path) -> str:
@@ -162,15 +212,41 @@ def _materialize_source(source: str, config: DoclingCollectorConfig, temp_dir: P
     response.raise_for_status()
 
     filename = _filename_from_headers(response.headers) or Path(urlparse(source).path).name
-    suffix = Path(filename).suffix.lower() or _suffix_from_content_type(
-        response.headers.get("Content-Type", "")
-    )
+    suffix = Path(filename).suffix.lower()
+    if suffix not in SUPPORTED_DOWNLOAD_SUFFIXES:
+        suffix = _suffix_from_content_type(
+            response.headers.get("Content-Type", "")
+        )
+    if suffix not in SUPPORTED_DOWNLOAD_SUFFIXES:
+        suffix = ""
     local_path = temp_dir / f"download{suffix or '.bin'}"
+    first_bytes = b""
     with local_path.open("wb") as file:
         for chunk in response.iter_content(chunk_size=1024 * 256):
             if chunk:
+                if not first_bytes:
+                    first_bytes = chunk[:64]
                 file.write(chunk)
+
+    if not suffix:
+        detected_suffix = _suffix_from_file_signature(first_bytes)
+        if detected_suffix:
+            detected_path = local_path.with_suffix(detected_suffix)
+            local_path.replace(detected_path)
+            local_path = detected_path
     return str(local_path)
+
+
+def _suffix_from_file_signature(data: bytes) -> str:
+    if data.startswith(b"%PDF"):
+        return ".pdf"
+    if data.startswith(b"PK\x03\x04"):
+        return ".zip"
+    if data.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
+        return ".hwp"
+    if data.lstrip().startswith((b"<!doctype html", b"<html")):
+        return ".html"
+    return ""
 
 
 def _filename_from_headers(headers: Dict[str, str]) -> Optional[str]:
@@ -274,6 +350,8 @@ def _collect_zip_documents(
             member_path = Path(member.filename)
             suffix = member_path.suffix.lower()
             if suffix not in DOCLING_EXTENSIONS | HWP_EXTENSIONS | ARCHIVE_EXTENSIONS:
+                continue
+            if member.file_size > config.max_zip_member_bytes:
                 continue
             target_path = _safe_zip_extract_path(extract_dir, member_path.name)
             with archive.open(member) as source_file, target_path.open("wb") as target_file:
@@ -487,7 +565,7 @@ def _looks_like_image_metadata(line: str) -> bool:
     )
 
 
-def _extract_pdf_text(path: Path) -> str:
+def _extract_pdf_text(path: Path, max_pages: int) -> str:
     try:
         import pypdfium2 as pdfium
     except ImportError:
@@ -500,8 +578,10 @@ def _extract_pdf_text(path: Path) -> str:
         return ""
 
     try:
-        for page in pdf:
+        page_count = min(len(pdf), max_pages)
+        for page_index in range(page_count):
             try:
+                page = pdf[page_index]
                 text_page = page.get_textpage()
                 text = text_page.get_text_range().strip()
             except Exception:
@@ -525,7 +605,6 @@ def _extract_pdf_text(path: Path) -> str:
 def _extract_pdf_ocr_text(path: Path, max_pages: int, scale: float) -> str:
     try:
         import pypdfium2 as pdfium
-        from rapidocr import RapidOCR
     except ImportError:
         return ""
 
@@ -536,7 +615,7 @@ def _extract_pdf_ocr_text(path: Path, max_pages: int, scale: float) -> str:
         return ""
 
     try:
-        ocr = RapidOCR()
+        ocr = _get_rapidocr()
         page_count = min(len(pdf), max_pages)
         for page_index in range(page_count):
             try:
@@ -563,6 +642,13 @@ def _extract_pdf_ocr_text(path: Path, max_pages: int, scale: float) -> str:
             pass
 
     return "\n\n".join(lines)
+
+
+@lru_cache(maxsize=1)
+def _get_rapidocr():
+    from rapidocr import RapidOCR
+
+    return RapidOCR()
 
 
 def _rapidocr_result_to_text(result) -> str:

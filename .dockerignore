@@ -19,3 +19,5 @@ app.db
 *.sqlite
 *.sqlite3
 servers
+docs
+tests

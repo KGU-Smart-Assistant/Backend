@@ -29,6 +29,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrender1 \
     libxi6 \
     libxtst6 \
+    libgl1 \
+    libgomp1 \
     libglib2.0-0 \
     libdbus-1-3 \
     tesseract-ocr \

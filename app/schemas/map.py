@@ -43,3 +43,15 @@ class MapNavigationResponse(BaseModel):
     origin: KakaoPlace
     destination: KakaoPlace
     directions: dict[str, Any]
+
+
+class CampusPlace(BaseModel):
+    id: str
+    name: str
+    description: str | None = None
+    latitude: float
+    longitude: float
+
+
+class CampusPlaceListResponse(BaseModel):
+    places: list[CampusPlace]

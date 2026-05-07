@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Set
 from urllib.parse import urljoin
 
+from app.crawlers.parsing.content_cleaner import clean_crawled_markdown
 from app.crawlers.parsing.parsers.base import BaseParser
 from app.crawlers.parsing.schemas import ParseContext, ParsedDocument
 
@@ -36,7 +37,7 @@ class NoticeDetailParser(BaseParser):
         if not raw_markdown:
             return None
 
-        content = raw_markdown.strip()
+        content = clean_crawled_markdown(raw_markdown, source_url=context.url)
         if not content:
             return None
 
@@ -148,6 +149,18 @@ class NoticeDetailParser(BaseParser):
             r"_?등록일_?\s*[:：]?\s*([0-9]{4}년\s*[0-9]{1,2}월\s*[0-9]{1,2}일(?:\s*[0-9]{1,2}시\s*[0-9]{1,2}분(?:\s*[0-9]{1,2}초)?)?)",
         )
         for pattern in line_patterns:
+            match = re.search(pattern, content)
+            if not match:
+                continue
+            parsed = self._parse_datetime(match.group(1))
+            if parsed is not None:
+                return parsed
+
+        generic_patterns = (
+            r"([0-9]{4}[./-][0-9]{1,2}[./-][0-9]{1,2}(?:\s+[0-9]{1,2}:[0-9]{2}(?::[0-9]{2})?)?)",
+            r"([0-9]{4}년\s*[0-9]{1,2}월\s*[0-9]{1,2}일(?:\s*[0-9]{1,2}시\s*[0-9]{1,2}분(?:\s*[0-9]{1,2}초)?)?)",
+        )
+        for pattern in generic_patterns:
             match = re.search(pattern, content)
             if not match:
                 continue

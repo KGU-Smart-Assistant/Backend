@@ -1,5 +1,6 @@
 import argparse
 import json
+import multiprocessing as mp
 from pathlib import Path
 import sys
 from datetime import datetime
@@ -145,6 +146,11 @@ def build_crawler_config(source: Dict[str, Any]) -> Crawl4AICollectorConfig:
         max_pages=source.get("max_pages", 20),
         max_depth=source.get("max_depth", 2),
         max_pagination_pages=source.get("max_pagination_pages", 200),
+        min_published_at=(
+            datetime(source["min_published_year"], 1, 1)
+            if source.get("min_published_year") is not None
+            else None
+        ),
         category=source.get("category"),
         department=source.get("department"),
         include_patterns=tuple(source.get("include_patterns", DEFAULT_INCLUDE_PATTERNS)),
@@ -186,6 +192,36 @@ def build_crawler_config(source: Dict[str, Any]) -> Crawl4AICollectorConfig:
             skip_images=source.get("skip_images", False),
         ),
     )
+
+
+def collect_source_documents(
+    crawler_config: Crawl4AICollectorConfig,
+    *,
+    timeout_seconds: int,
+):
+    if timeout_seconds <= 0:
+        return collect_documents_with_crawl4ai(crawler_config)
+
+    context_name = "fork" if "fork" in mp.get_all_start_methods() else None
+    context = mp.get_context(context_name) if context_name else mp.get_context()
+    pool = context.Pool(processes=1)
+    try:
+        result = pool.apply_async(collect_documents_with_crawl4ai, (crawler_config,))
+        documents = result.get(timeout_seconds)
+    except mp.TimeoutError as exc:
+        pool.terminate()
+        pool.join()
+        raise TimeoutError(
+            f"source collection exceeded {timeout_seconds} seconds"
+        ) from exc
+    except Exception:
+        pool.terminate()
+        pool.join()
+        raise
+    else:
+        pool.close()
+        pool.join()
+        return documents
 
 
 def _derive_allowed_path_prefixes(seed_urls: List[str]) -> List[str]:
@@ -269,9 +305,21 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
         help="Limit ingestion to sources whose names start with the prefix. Can be provided multiple times.",
     )
     parser.add_argument(
+        "--exclude-source",
+        action="append",
+        dest="exclude_sources",
+        help="Exclude the named source from ingestion. Can be provided multiple times.",
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         help="Process at most this many matching sources.",
+    )
+    parser.add_argument(
+        "--source-timeout-seconds",
+        type=int,
+        default=0,
+        help="Skip a source if collection takes longer than this many seconds. 0 disables the timeout.",
     )
     parser.add_argument(
         "--skip-embed",
@@ -306,6 +354,7 @@ def select_sources(
     *,
     names: List[str] | None = None,
     prefixes: List[str] | None = None,
+    exclude_names: List[str] | None = None,
     limit: int | None = None,
 ) -> List[Dict[str, Any]]:
     selected_sources = sources
@@ -321,6 +370,14 @@ def select_sources(
             source
             for source in selected_sources
             if any(source.get("name", "").startswith(prefix) for prefix in prefixes)
+        ]
+
+    if exclude_names:
+        blocked_names = set(exclude_names)
+        selected_sources = [
+            source
+            for source in selected_sources
+            if source.get("name") not in blocked_names
         ]
 
     if limit is not None and limit >= 0:
@@ -407,6 +464,7 @@ def main(argv: List[str] | None = None) -> None:
         sources,
         names=args.sources,
         prefixes=args.source_prefixes,
+        exclude_names=args.exclude_sources,
         limit=args.limit,
     )
     if not sources:
@@ -430,97 +488,130 @@ def main(argv: List[str] | None = None) -> None:
             max_pages=args.max_pages,
             max_pagination_pages=args.max_pagination_pages,
         )
-        crawler_config = build_crawler_config(source)
-        raw_documents = collect_documents_with_crawl4ai(crawler_config)
-        dedup_result = select_latest_documents(raw_documents)
-        documents = dedup_result.documents
-        chunks = chunk_documents(documents, chunk_size=1000, chunk_overlap=200)
-        embedded_count = 0
-        stored_count = 0
-
-        if source.get("embed", True) and chunks:
-            embedding_limit = source.get("embedding_limit")
-            attachment_embedding_limit = source.get("attachment_embedding_limit")
-            target_chunks = select_embedding_chunks(
-                chunks,
-                embedding_limit=embedding_limit,
-                attachment_embedding_limit=attachment_embedding_limit,
+        print(f"[{source['name']}] start", flush=True)
+        try:
+            crawler_config = build_crawler_config(source)
+            raw_documents = collect_source_documents(
+                crawler_config,
+                timeout_seconds=args.source_timeout_seconds,
             )
-            embedded_chunks = embed_chunks(target_chunks)
-            embedded_count = len(embedded_chunks)
-            total_embedded_chunks += embedded_count
-            if args.store_vectors and embedded_chunks:
-                delete_embedded_chunks_for_documents(documents)
-                stored_count = upsert_embedded_chunks(
-                    embedded_chunks,
-                    category=source.get("category"),
-                    department=source.get("department"),
+            dedup_result = select_latest_documents(raw_documents)
+            documents = dedup_result.documents
+            chunks = chunk_documents(documents, chunk_size=1000, chunk_overlap=200)
+            embedded_count = 0
+            stored_count = 0
+
+            if source.get("embed", True) and chunks:
+                embedding_limit = source.get("embedding_limit")
+                attachment_embedding_limit = source.get("attachment_embedding_limit")
+                target_chunks = select_embedding_chunks(
+                    chunks,
+                    embedding_limit=embedding_limit,
+                    attachment_embedding_limit=attachment_embedding_limit,
                 )
-                total_stored_chunks += stored_count
+                embedded_chunks = embed_chunks(target_chunks)
+                embedded_count = len(embedded_chunks)
+                total_embedded_chunks += embedded_count
+                if args.store_vectors and embedded_chunks:
+                    delete_embedded_chunks_for_documents(documents)
+                    stored_count = upsert_embedded_chunks(
+                        embedded_chunks,
+                        category=source.get("category"),
+                        department=source.get("department"),
+                    )
+                    total_stored_chunks += stored_count
 
-        total_documents += len(documents)
-        total_chunks += len(chunks)
+            total_documents += len(documents)
+            total_chunks += len(chunks)
 
-        source_summary = classify_source_report(
-            category=source.get("category"),
-            raw_documents=dedup_result.total_input,
-            documents=len(documents),
-            exact_duplicates_removed=dedup_result.exact_duplicates_removed,
-            version_duplicates_removed=dedup_result.version_duplicates_removed,
-        )
-        source_status_counts[source_summary["status"]] = (
-            source_status_counts.get(source_summary["status"], 0) + 1
-        )
-        source_report = {
-            "name": source["name"],
-            "category": source.get("category"),
-            "department": source.get("department"),
-            "seed_urls": source["seed_urls"],
-            "raw_documents": dedup_result.total_input,
-            "documents": len(documents),
-            "exact_duplicates_removed": dedup_result.exact_duplicates_removed,
-            "version_duplicates_removed": dedup_result.version_duplicates_removed,
-            "chunks": len(chunks),
-            "embedded_chunks": embedded_count,
-            "stored_chunks": stored_count,
-            "db_documents": 0,
-            "db_chunks": 0,
-            "status": source_summary["status"],
-            "status_reason": source_summary["reason"],
-        }
-        if args.store_db:
-            stored_db = store_ingest_source_result(
-                run_id=run_id,
-                source=source,
-                documents=documents,
-                chunks=chunks,
-                source_report=source_report,
-                started_at=source_started_at,
-                completed_at=datetime.now(),
+            source_summary = classify_source_report(
+                category=source.get("category"),
+                raw_documents=dedup_result.total_input,
+                documents=len(documents),
+                exact_duplicates_removed=dedup_result.exact_duplicates_removed,
+                version_duplicates_removed=dedup_result.version_duplicates_removed,
             )
-            source_report["db_documents"] = stored_db["documents"]
-            source_report["db_chunks"] = stored_db["chunks"]
-            total_db_documents += stored_db["documents"]
-            total_db_chunks += stored_db["chunks"]
+            source_status_counts[source_summary["status"]] = (
+                source_status_counts.get(source_summary["status"], 0) + 1
+            )
+            source_report = {
+                "name": source["name"],
+                "category": source.get("category"),
+                "department": source.get("department"),
+                "seed_urls": source["seed_urls"],
+                "raw_documents": dedup_result.total_input,
+                "documents": len(documents),
+                "exact_duplicates_removed": dedup_result.exact_duplicates_removed,
+                "version_duplicates_removed": dedup_result.version_duplicates_removed,
+                "chunks": len(chunks),
+                "embedded_chunks": embedded_count,
+                "stored_chunks": stored_count,
+                "db_documents": 0,
+                "db_chunks": 0,
+                "status": source_summary["status"],
+                "status_reason": source_summary["reason"],
+            }
+            if args.store_db:
+                stored_db = store_ingest_source_result(
+                    run_id=run_id,
+                    source=source,
+                    documents=documents,
+                    chunks=chunks,
+                    source_report=source_report,
+                    started_at=source_started_at,
+                    completed_at=datetime.now(),
+                )
+                source_report["db_documents"] = stored_db["documents"]
+                source_report["db_chunks"] = stored_db["chunks"]
+                total_db_documents += stored_db["documents"]
+                total_db_chunks += stored_db["chunks"]
 
-        source_reports.append(source_report)
+            source_reports.append(source_report)
 
-        print(
-            f"[{source['name']}] raw_documents={dedup_result.total_input} "
-            f"documents={len(documents)} "
-            f"exact_duplicates_removed={dedup_result.exact_duplicates_removed} "
-            f"version_duplicates_removed={dedup_result.version_duplicates_removed} "
-            f"chunks={len(chunks)} embedded_chunks={embedded_count} stored_chunks={stored_count} "
-            f"db_documents={source_report['db_documents']} db_chunks={source_report['db_chunks']} "
-            f"status={source_summary['status']}"
-        )
+            print(
+                f"[{source['name']}] raw_documents={dedup_result.total_input} "
+                f"documents={len(documents)} "
+                f"exact_duplicates_removed={dedup_result.exact_duplicates_removed} "
+                f"version_duplicates_removed={dedup_result.version_duplicates_removed} "
+                f"chunks={len(chunks)} embedded_chunks={embedded_count} stored_chunks={stored_count} "
+                f"db_documents={source_report['db_documents']} db_chunks={source_report['db_chunks']} "
+                f"status={source_summary['status']}",
+                flush=True,
+            )
+        except Exception as exc:
+            source_status_counts["error"] = source_status_counts.get("error", 0) + 1
+            source_report = {
+                "name": source["name"],
+                "category": source.get("category"),
+                "department": source.get("department"),
+                "seed_urls": source["seed_urls"],
+                "raw_documents": 0,
+                "documents": 0,
+                "exact_duplicates_removed": 0,
+                "version_duplicates_removed": 0,
+                "chunks": 0,
+                "embedded_chunks": 0,
+                "stored_chunks": 0,
+                "db_documents": 0,
+                "db_chunks": 0,
+                "status": "error",
+                "status_reason": f"{exc.__class__.__name__}: {exc}",
+            }
+            source_reports.append(source_report)
+            print(
+                f"[{source['name']}] raw_documents=0 documents=0 "
+                "exact_duplicates_removed=0 version_duplicates_removed=0 "
+                "chunks=0 embedded_chunks=0 stored_chunks=0 db_documents=0 db_chunks=0 "
+                f"status=error error={exc.__class__.__name__}: {exc}",
+                flush=True,
+            )
 
-    print(f"total_documents={total_documents}")
-    print(f"total_chunks={total_chunks}")
-    print(f"total_embedded_chunks={total_embedded_chunks}")
-    print(f"total_stored_chunks={total_stored_chunks}")
-    print(f"total_db_documents={total_db_documents}")
-    print(f"total_db_chunks={total_db_chunks}")
+    print(f"total_documents={total_documents}", flush=True)
+    print(f"total_chunks={total_chunks}", flush=True)
+    print(f"total_embedded_chunks={total_embedded_chunks}", flush=True)
+    print(f"total_stored_chunks={total_stored_chunks}", flush=True)
+    print(f"total_db_documents={total_db_documents}", flush=True)
+    print(f"total_db_chunks={total_db_chunks}", flush=True)
 
     report = {
         "generated_at": datetime.now().isoformat(),
@@ -536,7 +627,7 @@ def main(argv: List[str] | None = None) -> None:
         "sources": source_reports,
     }
     report_path = write_ingest_report(report, default_report_output_dir())
-    print(f"ingest_report={report_path}")
+    print(f"ingest_report={report_path}", flush=True)
 
 
 if __name__ == "__main__":

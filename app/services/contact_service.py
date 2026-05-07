@@ -1,51 +1,38 @@
-from dataclasses import dataclass
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.models import KguContact
 
 
-@dataclass(frozen=True)
-class Contact:
-    department_id: str
-    department_name: str
-    phone_number: str
-
-    @property
-    def tel_uri(self) -> str:
-        digits = "".join(char for char in self.phone_number if char.isdigit())
-        return f"tel:{digits}"
-
-    def to_dict(self) -> dict[str, str]:
-        return {
-            "department_id": self.department_id,
-            "department_name": self.department_name,
-            "phone_number": self.phone_number,
-            "tel_uri": self.tel_uri,
-        }
-
-# 전화번호 수정할 것
-CONTACTS = [
-    Contact(
-        department_id="academic_affairs",
-        department_name="학사지원팀",
-        phone_number="031-249-0000",
-    ),
-    Contact(
-        department_id="student_support",
-        department_name="학생지원팀",
-        phone_number="031-249-1111",
-    ),
-    Contact(
-        department_id="admissions",
-        department_name="입학관리팀",
-        phone_number="031-249-2222",
-    ),
-]
+def _tel_uri(phone_number: str) -> str:
+    digits = "".join(char for char in phone_number if char.isdigit())
+    return f"tel:{digits}"
 
 
-def list_department_contacts() -> list[dict[str, str]]:
-    return [contact.to_dict() for contact in CONTACTS]
+def _contact_to_dict(contact: KguContact) -> dict[str, str | None]:
+    department_id = str(contact.id)
+    return {
+        "department_id": department_id,
+        "department_name": contact.name,
+        "phone_number": contact.phone,
+        "description": contact.description,
+        "tel_uri": _tel_uri(contact.phone),
+    }
 
 
-def get_department_contact(department_id: str) -> dict[str, str] | None:
-    for contact in CONTACTS:
-        if contact.department_id == department_id:
-            return contact.to_dict()
-    return None
+def list_department_contacts(db: Session) -> list[dict[str, str | None]]:
+    contacts = db.execute(select(KguContact).order_by(KguContact.id)).scalars().all()
+    return [_contact_to_dict(contact) for contact in contacts]
+
+
+def get_department_contact(db: Session, department_id: str) -> dict[str, str | None] | None:
+    try:
+        contact_id = int(department_id)
+    except ValueError:
+        return None
+
+    contact = db.get(KguContact, contact_id)
+    if contact is None:
+        return None
+
+    return _contact_to_dict(contact)

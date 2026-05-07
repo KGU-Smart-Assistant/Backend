@@ -5,6 +5,10 @@ class Settings(BaseSettings):
     app_name: str = "KGU Smart Assistant API"
     app_version: str = "0.1.0"
     api_v1_prefix: str = "/api/v1"
+    cors_allowed_origins: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
     google_api_key: str
     gemini_model: str = "gemini-3-flash-preview"
     kakao_rest_api_key: str | None = None

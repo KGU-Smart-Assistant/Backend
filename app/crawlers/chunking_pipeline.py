@@ -1,5 +1,6 @@
 from typing import List
 
+from app.crawlers.parsing.content_cleaner import clean_crawled_markdown
 from app.schemas import Document, DocumentChunk
 
 
@@ -11,7 +12,9 @@ def chunk_document(
     """Split a document into overlapping text chunks."""
     _validate_chunking_options(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
-    normalized_text = _normalize_text(document.content)
+    normalized_text = _normalize_text(
+        clean_crawled_markdown(document.content, source_url=document.source_url)
+    )
     if not normalized_text:
         return []
 

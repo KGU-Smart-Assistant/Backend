@@ -234,6 +234,86 @@ def test_extract_pagination_urls_treats_zero_limit_as_unlimited() -> None:
     assert len(urls) == 3
 
 
+def test_extract_pagination_urls_stops_when_board_page_is_before_cutoff() -> None:
+    config = Crawl4AICollectorConfig(
+        seed_urls=["https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1"],
+        follow_patterns=("bbsno=1073",),
+        allowed_path_prefixes=("/department/",),
+        min_published_at=datetime(2018, 1, 1),
+    )
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown="총게시물 : _27_ 건 페이지 : _2_ / 3\n2017.12.31 오래된 공지"
+        ),
+        links={
+            "internal": [
+                {"href": "/department/selectBbsNttView.do?bbsNo=1073&key=1&nttNo=1"},
+            ]
+        },
+    )
+
+    urls = _extract_pagination_urls(
+        url="https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&pageIndex=2",
+        result=result,
+        allowed_domains={"example.com"},
+        config=config,
+    )
+
+    assert urls == set()
+
+
+def test_extract_pagination_urls_with_cutoff_queues_only_next_page() -> None:
+    config = Crawl4AICollectorConfig(
+        seed_urls=["https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1"],
+        follow_patterns=("bbsno=1073",),
+        allowed_path_prefixes=("/department/",),
+        min_published_at=datetime(2018, 1, 1),
+    )
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown="총게시물 : _27_ 건 페이지 : _2_ / 5\n2019.01.03 최근 공지"
+        ),
+        links={
+            "internal": [
+                {"href": "/department/selectBbsNttView.do?bbsNo=1073&key=1&nttNo=2"},
+            ]
+        },
+    )
+
+    urls = _extract_pagination_urls(
+        url="https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&pageIndex=2",
+        result=result,
+        allowed_domains={"example.com"},
+        config=config,
+    )
+
+    assert urls == {
+        "https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&pageIndex=3",
+    }
+
+
+def test_extract_pagination_urls_skips_empty_board_pages() -> None:
+    config = Crawl4AICollectorConfig(
+        seed_urls=["https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1"],
+        follow_patterns=("bbsno=1073",),
+        allowed_path_prefixes=("/department/",),
+        min_published_at=datetime(2018, 1, 1),
+    )
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(fit_markdown="총게시물 : _0_ 건 페이지 : _1_ / 3"),
+        links={"internal": [{"href": "?pageIndex=2"}]},
+    )
+
+    urls = _extract_pagination_urls(
+        url="https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1",
+        result=result,
+        allowed_domains={"example.com"},
+        config=config,
+    )
+
+    assert urls == set()
+
+
 def test_within_page_limit_treats_zero_as_unlimited() -> None:
     assert _within_page_limit({"https://example.com/1"}, max_pages=0)
     assert not _within_page_limit({"https://example.com/1"}, max_pages=1)
@@ -290,6 +370,52 @@ def test_build_html_document_extracts_metadata_from_board_detail() -> None:
         "https://example.com/files/plan.pdf",
         "https://example.com/downloadBbsFile.do?atchmnflNo=123",
     ]
+
+
+def test_build_html_document_skips_documents_older_than_cutoff() -> None:
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown=(
+                "[공지사항] 오래된 공지\n\n"
+                "_작성자_ 예시학과\n"
+                "_작성일_ 2017년 12월 31일 10시 00분 00초\n"
+            )
+        ),
+        metadata={"title": "공지사항 - 예시학과"},
+        links={"internal": [{"href": "/files/old.pdf"}]},
+    )
+
+    document = _build_html_document(
+        url="https://example.com/selectBbsNttView.do?nttNo=old",
+        result=result,
+        category="notice",
+        department="example",
+        collected_at=datetime(2026, 4, 29, 12, 0, 0),
+        min_published_at=datetime(2018, 1, 1),
+    )
+
+    assert document is None
+
+
+def test_build_html_document_skips_board_detail_without_date_when_cutoff_is_enabled() -> None:
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(
+            fit_markdown="[공지사항] 날짜 없는 공지\n\n_작성자_ 예시학과\n본문"
+        ),
+        metadata={"title": "공지사항 - 예시학과"},
+        links={"internal": []},
+    )
+
+    document = _build_html_document(
+        url="https://example.com/selectBbsNttView.do?nttNo=no-date",
+        result=result,
+        category="notice",
+        department="example",
+        collected_at=datetime(2026, 4, 29, 12, 0, 0),
+        min_published_at=datetime(2018, 1, 1),
+    )
+
+    assert document is None
 
 
 def test_apply_attachment_parent_titles_prefers_board_title() -> None:

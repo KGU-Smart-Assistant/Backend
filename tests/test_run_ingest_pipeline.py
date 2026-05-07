@@ -200,12 +200,14 @@ def test_build_crawler_config_derives_allowed_path_prefixes_and_skip_images() ->
             "seed_urls": ["https://www.kyonggi.ac.kr/open_major_Seoul/selectBbsNttList.do?key=1"],
             "category": "notice",
             "department": "open_major_seoul",
+            "min_published_year": 2018,
             "skip_images": True,
             "allowed_author_department_filters": ["?먯쑀?꾧났"],
         }
     )
 
     assert config.allowed_path_prefixes == ("/open_major_Seoul/",)
+    assert config.min_published_at == datetime(2018, 1, 1)
     assert config.docling_config.skip_images is True
     assert config.allowed_author_department_filters == ("?먯쑀?꾧났",)
 
@@ -255,6 +257,7 @@ def test_select_sources_applies_name_prefix_and_limit_filters() -> None:
         sources,
         names=["alpha_notice", "beta_notice"],
         prefixes=["alpha_", "beta_"],
+        exclude_names=["beta_notice"],
         limit=1,
     )
 

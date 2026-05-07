@@ -83,6 +83,7 @@ class Crawl4AICollectorConfig:
     blocked_keyword_filters: Optional[Tuple[str, ...]] = None
     allowed_author_department_filters: Optional[Tuple[str, ...]] = None
     blocked_author_department_filters: Optional[Tuple[str, ...]] = None
+    min_published_at: Optional[datetime] = None
     docling_config: DoclingCollectorConfig = field(default_factory=DoclingCollectorConfig)
 
 
@@ -146,11 +147,13 @@ async def _collect_documents_with_crawl4ai(
             if not getattr(result, "success", False):
                 continue
 
-            if _should_collect_html_url(
+            should_collect_html = _should_collect_html_url(
                 url=current_url,
                 config=config,
                 is_seed=depth == 0,
-            ):
+            )
+            html_document: Optional[Document] = None
+            if should_collect_html:
                 html_document = _build_html_document(
                     url=current_url,
                     result=result,
@@ -161,6 +164,7 @@ async def _collect_documents_with_crawl4ai(
                     blocked_keyword_filters=config.blocked_keyword_filters,
                     allowed_author_department_filters=config.allowed_author_department_filters,
                     blocked_author_department_filters=config.blocked_author_department_filters,
+                    min_published_at=config.min_published_at,
                 )
                 if html_document is not None:
                     documents.append(html_document)
@@ -176,6 +180,21 @@ async def _collect_documents_with_crawl4ai(
                 allowed_domains=allowed_domains,
                 config=config,
             )
+            if not _should_follow_discovered_links(
+                url=current_url,
+                result=result,
+                config=config,
+            ):
+                discovered_html_urls = set()
+                discovered_doc_urls = set()
+            elif config.min_published_at is not None and _is_board_list_url(current_url):
+                discovered_html_urls = {
+                    next_url
+                    for next_url in discovered_html_urls
+                    if not _is_board_list_url(next_url)
+                }
+            if should_collect_html and html_document is None:
+                discovered_doc_urls = set()
             discovered_html_urls.update(
                 _extract_pagination_urls(
                     url=current_url,
@@ -232,6 +251,7 @@ def _build_html_document(
     blocked_keyword_filters: Optional[Tuple[str, ...]] = None,
     allowed_author_department_filters: Optional[Tuple[str, ...]] = None,
     blocked_author_department_filters: Optional[Tuple[str, ...]] = None,
+    min_published_at: Optional[datetime] = None,
 ) -> Optional[Document]:
     parsed = PARSER_ROUTER.parse(
         result=result,
@@ -246,6 +266,18 @@ def _build_html_document(
         ),
     )
     if parsed is None:
+        return None
+    if (
+        min_published_at is not None
+        and parsed.published_at is not None
+        and parsed.published_at < min_published_at
+    ):
+        return None
+    if (
+        min_published_at is not None
+        and parsed.published_at is None
+        and _is_board_detail_url(url)
+    ):
         return None
 
     return Document(
@@ -295,7 +327,9 @@ def _extract_pagination_urls(
     allowed_domains: Set[str],
     config: Crawl4AICollectorConfig,
 ) -> Set[str]:
-    if "selectbbsnttlist.do" not in url.lower():
+    if not _is_board_list_url(url):
+        return set()
+    if not _should_follow_discovered_links(url=url, result=result, config=config):
         return set()
 
     last_page = _extract_last_page_index(result)
@@ -304,12 +338,86 @@ def _extract_pagination_urls(
 
     if config.max_pagination_pages > 0:
         last_page = min(last_page, config.max_pagination_pages)
+    if config.min_published_at is not None:
+        current_page = _current_page_index(url)
+        if current_page >= last_page:
+            return set()
+        page_url = _with_query_param(url, "pageIndex", str(current_page + 1))
+        if _is_allowed_url(page_url, allowed_domains, config):
+            return {_normalize_url(page_url)}
+        return set()
+
     pagination_urls: Set[str] = set()
     for page_index in range(1, last_page + 1):
         page_url = _with_query_param(url, "pageIndex", str(page_index))
         if _is_allowed_url(page_url, allowed_domains, config):
             pagination_urls.add(_normalize_url(page_url))
     return pagination_urls
+
+
+def _should_follow_discovered_links(
+    *,
+    url: str,
+    result,
+    config: Crawl4AICollectorConfig,
+) -> bool:
+    if not _is_board_list_url(url):
+        return True
+    if config.min_published_at is None:
+        return True
+    if not _has_board_detail_links(result):
+        return False
+
+    dates = _extract_dates_from_result(result)
+    if not dates:
+        return True
+    return max(dates) >= config.min_published_at
+
+
+def _has_board_detail_links(result) -> bool:
+    for link_group in (getattr(result, "links", {}) or {}).values():
+        for link in link_group:
+            href = ((link or {}).get("href") or "").lower()
+            if "selectbbsnttview.do" in href:
+                return True
+    return False
+
+
+def _extract_dates_from_result(result) -> List[datetime]:
+    markdown = getattr(result, "markdown", None)
+    content = (
+        getattr(markdown, "fit_markdown", None)
+        or getattr(markdown, "raw_markdown", None)
+        or ""
+    )
+    dates: List[datetime] = []
+    patterns = (
+        r"([0-9]{4})[./-]([0-9]{1,2})[./-]([0-9]{1,2})",
+        r"([0-9]{4})\s*년\s*([0-9]{1,2})\s*월\s*([0-9]{1,2})\s*일",
+    )
+    for pattern in patterns:
+        for year, month, day in re.findall(pattern, content):
+            try:
+                dates.append(datetime(int(year), int(month), int(day)))
+            except ValueError:
+                continue
+    return dates
+
+
+def _current_page_index(url: str) -> int:
+    parsed = urlparse(url)
+    for key, value in parse_qsl(parsed.query, keep_blank_values=True):
+        if key.casefold() == "pageindex" and value.isdigit():
+            return int(value)
+    return 1
+
+
+def _is_board_list_url(url: str) -> bool:
+    return "selectbbsnttlist.do" in url.lower()
+
+
+def _is_board_detail_url(url: str) -> bool:
+    return "selectbbsnttview.do" in url.lower()
 
 
 def _extract_last_page_index(result) -> Optional[int]:

@@ -1,3 +1,4 @@
+from app.crawlers.parsing.content_cleaner import clean_crawled_markdown
 from app.crawlers.parsing.parsers.base import BaseParser
 from app.crawlers.parsing.schemas import ParseContext, ParsedDocument
 
@@ -11,7 +12,7 @@ class FaqParser(BaseParser):
         if not raw_markdown:
             return None
 
-        content = raw_markdown.strip()
+        content = clean_crawled_markdown(raw_markdown, source_url=context.url)
         if not content:
             return None
 
