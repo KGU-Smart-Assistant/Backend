@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from app.crawlers import run_ingest
-from app.schemas import Document
+from app.schemas import Document, DocumentChunk
 
 
 def _build_document(
@@ -90,12 +90,14 @@ def test_run_ingest_executes_end_to_end_pipeline(monkeypatch, capsys) -> None:
     assert "[academic_notices] raw_documents=3 documents=2" in captured.out
     assert "exact_duplicates_removed=1" in captured.out
     assert "version_duplicates_removed=0" in captured.out
-    assert "chunks=4 embedded_chunks=2 stored_chunks=0" in captured.out
+    assert "chunks=4 embedded_chunks=2 stored_chunks=0 db_documents=0 db_chunks=0" in captured.out
     assert "status=ok" in captured.out
     assert "total_documents=2" in captured.out
     assert "total_chunks=4" in captured.out
     assert "total_embedded_chunks=2" in captured.out
     assert "total_stored_chunks=0" in captured.out
+    assert "total_db_documents=0" in captured.out
+    assert "total_db_chunks=0" in captured.out
     normalized_output = captured.out.replace("\\", "/")
     assert "ingest_report=.tmp/test-reports/ingest-report-test.json" in normalized_output
 
@@ -280,6 +282,48 @@ def test_apply_runtime_overrides_updates_optional_settings() -> None:
     assert source["embed"] is True
 
 
+def test_select_embedding_chunks_includes_attachment_quota() -> None:
+    chunks = [
+        DocumentChunk(
+            chunk_id=f"main-{index}",
+            doc_id="main-doc",
+            chunk_index=index,
+            text=f"main chunk {index}",
+            title="Main notice",
+            source_url="https://example.com/notice",
+            source_type="html",
+        )
+        for index in range(3)
+    ]
+    chunks.extend(
+        [
+            DocumentChunk(
+                chunk_id=f"attachment-{index}",
+                doc_id="attachment-doc",
+                chunk_index=index,
+                text=f"attachment chunk {index}",
+                title="Attachment",
+                source_url=f"https://example.com/downloadBbsFile.do?atchmnflNo={index}",
+                source_type="pdf",
+            )
+            for index in range(3)
+        ]
+    )
+
+    selected = run_ingest.select_embedding_chunks(
+        chunks,
+        embedding_limit=2,
+        attachment_embedding_limit=2,
+    )
+
+    assert [chunk.chunk_id for chunk in selected] == [
+        "main-0",
+        "main-1",
+        "attachment-0",
+        "attachment-1",
+    ]
+
+
 def test_run_ingest_main_applies_cli_filters_and_runtime_overrides(monkeypatch, capsys) -> None:
     now = datetime(2026, 4, 10, 12, 0, 0)
     source_config = [
@@ -400,6 +444,12 @@ def test_run_ingest_main_stores_embedded_chunks_when_requested(monkeypatch, caps
     monkeypatch.setattr(run_ingest, "load_sources_config", lambda _: source_config)
     monkeypatch.setattr(run_ingest, "collect_documents_with_crawl4ai", lambda _: documents)
     monkeypatch.setattr(run_ingest, "embed_chunks", lambda chunks: [object() for _ in chunks])
+    deleted_documents = []
+    monkeypatch.setattr(
+        run_ingest,
+        "delete_embedded_chunks_for_documents",
+        lambda docs: deleted_documents.extend(docs),
+    )
     monkeypatch.setattr(run_ingest, "upsert_embedded_chunks", lambda chunks, **_: len(chunks))
     monkeypatch.setattr(run_ingest, "default_report_output_dir", lambda: Path(".tmp/test-reports"))
     monkeypatch.setattr(
@@ -411,8 +461,61 @@ def test_run_ingest_main_stores_embedded_chunks_when_requested(monkeypatch, caps
     run_ingest.main(["--source", "alpha_notice", "--store-vectors"])
 
     captured = capsys.readouterr()
+    assert deleted_documents == documents
     assert "stored_chunks=2" in captured.out
     assert "total_stored_chunks=2" in captured.out
+
+
+def test_run_ingest_main_stores_documents_in_db_when_requested(monkeypatch, capsys) -> None:
+    now = datetime(2026, 4, 10, 12, 0, 0)
+    source_config = [
+        {
+            "name": "alpha_notice",
+            "seed_urls": ["https://example.com/notices"],
+            "category": "notice",
+            "department": "academic_affairs",
+            "max_pages": 20,
+            "max_pagination_pages": 200,
+            "embed": False,
+        }
+    ]
+    documents = [
+        _build_document(
+            doc_id="unique",
+            source_url="https://example.com/notices/1",
+            title="Academic Notice",
+            content="long-notice-" * 120,
+            collected_at=now,
+        )
+    ]
+    captured_store = {}
+
+    monkeypatch.setattr(run_ingest, "load_sources_config", lambda _: source_config)
+    monkeypatch.setattr(run_ingest, "collect_documents_with_crawl4ai", lambda _: documents)
+    monkeypatch.setattr(run_ingest, "default_report_output_dir", lambda: Path(".tmp/test-reports"))
+    monkeypatch.setattr(
+        run_ingest,
+        "write_ingest_report",
+        lambda report, output_dir: output_dir / "ingest-report-test.json",
+    )
+
+    def _store_result(**kwargs):
+        captured_store.update(kwargs)
+        return {"documents": len(kwargs["documents"]), "chunks": len(kwargs["chunks"])}
+
+    monkeypatch.setattr(run_ingest, "store_ingest_source_result", _store_result)
+
+    run_ingest.main(["--source", "alpha_notice", "--store-db"])
+
+    captured = capsys.readouterr()
+    assert captured_store["source"]["name"] == "alpha_notice"
+    assert captured_store["source_report"]["status"] == "ok"
+    assert captured_store["source_report"]["db_documents"] == 1
+    assert captured_store["source_report"]["db_chunks"] == 2
+    assert captured_store["run_id"]
+    assert "db_documents=1 db_chunks=2" in captured.out
+    assert "total_db_documents=1" in captured.out
+    assert "total_db_chunks=2" in captured.out
 
 
 def test_run_ingest_main_rejects_store_vectors_with_skip_embed() -> None:

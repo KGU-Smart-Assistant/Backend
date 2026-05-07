@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -8,3 +11,5 @@ class DocumentChunk(BaseModel):
     text: str = Field(min_length=1)
     title: str = Field(min_length=1, max_length=300)
     source_url: str
+    source_type: str = "html"
+    published_at: Optional[datetime] = None

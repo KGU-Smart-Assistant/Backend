@@ -14,16 +14,51 @@ def test_decide_chat_route_uses_relational_db_for_phone_question() -> None:
     assert decision.db_intent == "phone"
 
 
-def test_decide_chat_route_uses_rag_for_document_question() -> None:
+def test_decide_chat_route_uses_relational_db_for_map_question() -> None:
+    decision = chat_orchestrator.decide_chat_route("학생회관 위치 알려줘")
+
+    assert decision.route == "relational_db"
+    assert decision.db_intent == "map"
+
+
+def test_decide_chat_route_uses_rag_for_notice_question() -> None:
     decision = chat_orchestrator.decide_chat_route("장학 신청 기간 공지 알려줘")
 
     assert decision.route == "rag"
+    assert "scholarship_support" in decision.reason
+
+
+def test_decide_chat_route_uses_rag_for_department_question() -> None:
+    decision = chat_orchestrator.decide_chat_route("청소년학과 전공이수자격원 접수 안내 알려줘")
+
+    assert decision.route == "rag"
+
+
+def test_decide_chat_route_uses_rag_for_materials_question() -> None:
+    decision = chat_orchestrator.decide_chat_route("자료실 첨부파일 신청서 내용 알려줘")
+
+    assert decision.route == "rag"
+    assert "materials" in decision.reason
+
+
+def test_decide_chat_route_uses_rag_for_graduation_question() -> None:
+    decision = chat_orchestrator.decide_chat_route("졸업요건과 전공 학점 기준 알려줘")
+
+    assert decision.route == "rag"
+    assert "graduation_requirements" in decision.reason
 
 
 def test_decide_chat_route_uses_weather_for_forecast_question() -> None:
     decision = chat_orchestrator.decide_chat_route("내일 수원 날씨 알려줘")
 
     assert decision.route == "weather"
+
+
+def test_phone_keyword_has_priority_over_department_rag_keyword() -> None:
+    decision = chat_orchestrator.decide_chat_route("청소년학과 전화번호 알려줘")
+
+    assert decision.route == "relational_db"
+    assert decision.db_intent == "phone"
 
 
 def test_decide_chat_route_parses_llm_json_when_heuristic_is_general(monkeypatch) -> None:
@@ -40,7 +75,11 @@ def test_decide_chat_route_parses_llm_json_when_heuristic_is_general(monkeypatch
 
 
 def test_answer_chat_uses_relational_db_service(monkeypatch) -> None:
-    monkeypatch.setattr(chat_orchestrator, "get_phone", lambda user_input, db: "도서관 전화번호는 031입니다.")
+    monkeypatch.setattr(
+        chat_orchestrator,
+        "get_phone",
+        lambda user_input, db: "도서관 전화번호는 031입니다.",
+    )
 
     result = chat_orchestrator.answer_chat("도서관 전화번호 알려줘", db=None)
 

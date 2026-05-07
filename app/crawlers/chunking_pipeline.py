@@ -34,6 +34,8 @@ def chunk_document(
                     text=chunk_text,
                     title=document.title,
                     source_url=document.source_url,
+                    source_type=document.source_type,
+                    published_at=document.published_at,
                 )
             )
             chunk_index += 1

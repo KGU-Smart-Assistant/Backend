@@ -128,6 +128,7 @@ async def _collect_documents_with_crawl4ai(
     queue: Deque[Tuple[str, int]] = deque((_normalize_url(url), 0) for url in config.seed_urls)
     visited_html_urls: Set[str] = set()
     collected_doc_urls: Set[str] = set()
+    attachment_parent_titles: Dict[str, str] = {}
     documents: List[Document] = []
     collected_at = datetime.now()
 
@@ -163,6 +164,11 @@ async def _collect_documents_with_crawl4ai(
                 )
                 if html_document is not None:
                     documents.append(html_document)
+                    for attachment_url in html_document.attachment_urls:
+                        attachment_parent_titles.setdefault(
+                            attachment_url,
+                            html_document.title,
+                        )
 
             discovered_html_urls, discovered_doc_urls = _extract_links(
                 base_url=current_url,
@@ -191,14 +197,25 @@ async def _collect_documents_with_crawl4ai(
         docling_config = config.docling_config
         docling_config.category = config.category or docling_config.category
         docling_config.department = config.department or docling_config.department
-        documents.extend(
-            collect_documents_with_docling(
-                sources=sorted(collected_doc_urls),
-                config=docling_config,
-            )
+        attachment_documents = collect_documents_with_docling(
+            sources=sorted(collected_doc_urls),
+            config=docling_config,
         )
+        _apply_attachment_parent_titles(attachment_documents, attachment_parent_titles)
+        documents.extend(attachment_documents)
 
     return documents
+
+
+def _apply_attachment_parent_titles(
+    documents: List[Document],
+    parent_titles: Dict[str, str],
+) -> None:
+    for document in documents:
+        base_source_url = document.source_url.split("#", 1)[0]
+        parent_title = parent_titles.get(base_source_url)
+        if parent_title:
+            document.title = parent_title
 
 
 def _within_page_limit(visited_html_urls: Set[str], max_pages: int) -> bool:
@@ -285,7 +302,8 @@ def _extract_pagination_urls(
     if last_page is None or last_page <= 1:
         return set()
 
-    last_page = min(last_page, config.max_pagination_pages)
+    if config.max_pagination_pages > 0:
+        last_page = min(last_page, config.max_pagination_pages)
     pagination_urls: Set[str] = set()
     for page_index in range(1, last_page + 1):
         page_url = _with_query_param(url, "pageIndex", str(page_index))
@@ -415,7 +433,7 @@ def _normalize_url(url: str) -> str:
     normalized_params = ""
     if parsed.params and not re.fullmatch(r"jsessionid=[^/?#]+", parsed.params, flags=re.IGNORECASE):
         normalized_params = parsed.params
-    normalized_query = urlencode(sorted(parse_qsl(parsed.query, keep_blank_values=True)))
+    normalized_query = _normalize_query_for_path(parsed.path, parsed.query)
     rebuilt = urlunparse(
         (
             parsed.scheme,
@@ -427,6 +445,52 @@ def _normalize_url(url: str) -> str:
         )
     )
     return rebuilt.rstrip("/")
+
+
+def _normalize_query_for_path(path: str, query: str) -> str:
+    query_items = parse_qsl(query, keep_blank_values=True)
+    lowered_path = path.lower()
+    if "selectbbsnttview.do" in lowered_path:
+        return _canonical_board_detail_query(query_items)
+    if "selectbbsnttlist.do" in lowered_path:
+        return _canonical_board_list_query(query_items)
+    return urlencode(sorted(query_items))
+
+
+def _canonical_board_detail_query(query_items: List[Tuple[str, str]]) -> str:
+    allowed_keys = {
+        "bbsno",
+        "key",
+        "nttno",
+        "selfat",
+    }
+    canonical_items: Dict[str, Tuple[str, str]] = {}
+    for key, value in query_items:
+        lowered_key = key.casefold()
+        if lowered_key not in allowed_keys:
+            continue
+        canonical_items.setdefault(lowered_key, (key, value))
+    return urlencode([canonical_items[key] for key in sorted(canonical_items)])
+
+
+def _canonical_board_list_query(query_items: List[Tuple[str, str]]) -> str:
+    allowed_keys = {
+        "bbsno",
+        "key",
+        "pageindex",
+        "selfat",
+        "sf.dc",
+        "sf.dcof",
+        "sf.of1",
+        "sf.of2",
+    }
+    canonical_items: Dict[str, Tuple[str, str]] = {}
+    for key, value in query_items:
+        lowered_key = key.casefold()
+        if lowered_key not in allowed_keys:
+            continue
+        canonical_items.setdefault(lowered_key, (key, value))
+    return urlencode([canonical_items[key] for key in sorted(canonical_items)])
 
 
 def _build_doc_id(source_url: str) -> str:

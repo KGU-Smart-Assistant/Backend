@@ -11,4 +11,11 @@ venv
 docker-compose.yml
 Dockerfile
 .tmp
+.pytest_tmp
 .crawl4ai-data
+kGU-chatbot
+app.db
+*.db
+*.sqlite
+*.sqlite3
+servers

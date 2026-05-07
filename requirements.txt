@@ -34,9 +34,12 @@ google-genai
 
 # DB ORM
 SQLAlchemy
+Alembic
 psycopg2-binary
 asyncpg
 # SQLite/SQLAlchemy helpers (optional but common)
 # aiosqlite
 PyYAML
 olefile
+ftfy
+charset-normalizer

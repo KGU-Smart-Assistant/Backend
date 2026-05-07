@@ -26,7 +26,7 @@ Notes:
 - `chromadb`, `openai`, `langchain`, and `tiktoken` exist in dependencies but are not part of the current main code path.
 - `app/services/search_service.py` is not fully implemented.
 - `app/db/base.py` is currently empty.
-- There is no formal DB migration system yet.
+- Alembic manages PostgreSQL schema migrations.
 
 ## Current Architecture
 Main online API layer:
@@ -110,7 +110,15 @@ Check available Gemini models:
 python -m app.utils.test_model
 ```
 
-There are currently no official DB initialization, migration, or seed commands.
+Apply DB migrations:
+```bash
+alembic upgrade head
+```
+
+Create a new migration after model changes:
+```bash
+alembic revision --autogenerate -m "describe change"
+```
 
 ## Branch, Commit, and PR Workflow
 - Workflow style: `main` / `develop` / `feature/*`
@@ -168,7 +176,7 @@ Commit message convention:
 - Treat `app/services/search_service.py` as the search service boundary.
 - Do not assume ChromaDB is already integrated.
 - Do not introduce LangChain or OpenAI usage unless explicitly required.
-- Do not create a migration framework unless explicitly requested.
+- Use Alembic revisions for schema changes.
 - Document any DB or vector-store design decision in the final response.
 
 ## Test Rules

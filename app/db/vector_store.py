@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from app.core.config import settings
-from app.schemas import EmbeddedChunk
+from app.schemas import Document, EmbeddedChunk
 
 
 def upsert_embedded_chunks(
@@ -33,6 +33,23 @@ def upsert_embedded_chunks(
         ],
     )
     return len(chunks)
+
+
+def delete_embedded_chunks_for_documents(
+    documents: List[Document],
+    *,
+    collection_name: str | None = None,
+) -> int:
+    """Delete existing vectors for documents before re-ingesting their chunks."""
+    if not documents:
+        return 0
+
+    collection = get_vector_collection(collection_name=collection_name)
+    deleted = 0
+    for doc_id in sorted({document.doc_id for document in documents}):
+        collection.delete(where={"doc_id": doc_id})
+        deleted += 1
+    return deleted
 
 
 def query_embedded_chunks(
@@ -70,6 +87,7 @@ def query_embedded_chunks(
                 "text": documents[index] if index < len(documents) else "",
                 "title": metadata.get("title", ""),
                 "source_url": metadata.get("source_url", ""),
+                "source_type": metadata.get("source_type"),
                 "distance": distances[index] if index < len(distances) else None,
                 "category": metadata.get("category"),
                 "department": metadata.get("department"),
@@ -126,8 +144,11 @@ def _build_chunk_metadata(
         "chunk_index": chunk.chunk_index,
         "title": chunk.title,
         "source_url": chunk.source_url,
+        "source_type": chunk.source_type,
         "embedding_model": chunk.embedding_model,
     }
+    if chunk.published_at:
+        metadata["published_at"] = chunk.published_at.isoformat()
     if category:
         metadata["category"] = category
     if department:

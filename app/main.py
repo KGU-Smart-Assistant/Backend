@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.db.seed import seed_contacts_from_json, seed_places_from_json
-from app.db.session import SessionLocal, init_db
+from app.db.session import SessionLocal
 
 
 def create_app() -> FastAPI:
@@ -14,8 +14,7 @@ def create_app() -> FastAPI:
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
     @app.on_event("startup")
-    def _init_db() -> None:
-        init_db()
+    def _seed_db() -> None:
         with SessionLocal() as db:
             seed_places_from_json(db)
             seed_contacts_from_json(db)

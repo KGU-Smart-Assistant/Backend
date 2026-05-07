@@ -3,6 +3,8 @@ from types import SimpleNamespace
 
 from app.crawlers.docling_collector import (
     DoclingCollectorConfig,
+    _clean_hwp_text,
+    _extract_title,
     collect_documents_with_docling,
 )
 
@@ -72,6 +74,53 @@ def test_collect_documents_with_docling_extracts_hwpx_text(tmp_path) -> None:
     assert documents[0].source_type == "hwpx"
     assert "입체조형학과" in documents[0].content
     assert "실험실습비 사용내역" in documents[0].content
+
+def test_clean_hwp_text_removes_binary_noise_and_keeps_korean() -> None:
+    cleaned = _clean_hwp_text(
+        "Bƀ ࠄ 铒먉 捤獥 汤捯\n"
+        "2026-1 성적향상장학금 신청 안내\n"
+        "신청기간: 2026.03.09.(월)~20.(금)\n"
+        "\x00\x01 KUTIS 로그인 → 신청마당"
+    )
+
+    assert "Bƀ" not in cleaned
+    assert "铒먉" not in cleaned
+    assert "2026-1 성적향상장학금 신청 안내" in cleaned
+    assert "신청기간: 2026.03.09.(월)~20.(금)" in cleaned
+    assert "KUTIS 로그인 → 신청마당" in cleaned
+
+
+def test_clean_hwp_text_removes_image_metadata_and_cjk_noise() -> None:
+    cleaned = _clean_hwp_text(
+        "漠杳 悵 그림입니다.\n"
+        "원본 그림의 이름: 투명배경마크.png\n"
+        "원본 그림의 크기: 가로 1336pixel, 세로 917pixel\n"
+        "프로그램 이름 : Adobe ImageReady\n"
+        "B 먉 밼 쀈 d d U < 楣⑰ 蝨 贀 솚 2026-1 성적향상장학금 신청 안내\n"
+        "신청 전 확인사항"
+    )
+
+    assert "그림입니다" not in cleaned
+    assert "원본 그림" not in cleaned
+    assert "Adobe ImageReady" not in cleaned
+    assert "漠杳" not in cleaned
+    assert "B 먉" not in cleaned
+    assert "밼 쀈" not in cleaned
+    assert "솚 2026-1" not in cleaned
+    assert "2026-1 성적향상장학금 신청 안내" in cleaned
+    assert "신청 전 확인사항" in cleaned
+
+
+def test_extract_title_skips_garbled_hwp_lines() -> None:
+    title = _extract_title(
+        content="Bƀ ࠄ 铒먉 捤獥 汤捯\n2026-1 성적향상장학금 신청 안내\n본문",
+        source="https://example.com/downloadBbsFile.do?atchmnflNo=1",
+        source_type="hwp",
+        headers={},
+        timeout_seconds=1,
+    )
+
+    assert title == "2026-1 성적향상장학금 신청 안내"
 
 
 def test_collect_documents_with_docling_extracts_supported_zip_members(
