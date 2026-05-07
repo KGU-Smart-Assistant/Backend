@@ -41,3 +41,5 @@ asyncpg
 # aiosqlite
 PyYAML
 olefile
+ftfy
+charset-normalizer

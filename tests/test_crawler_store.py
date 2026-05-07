@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
 from app.db.crawler_store import store_ingest_source_result
@@ -17,6 +17,11 @@ from app.schemas import Document, DocumentChunk
 
 def _session():
     engine = create_engine("sqlite:///:memory:")
+
+    @event.listens_for(engine, "connect")
+    def _enable_foreign_keys(dbapi_connection, _connection_record):
+        dbapi_connection.execute("PRAGMA foreign_keys=ON")
+
     Base.metadata.create_all(bind=engine)
     return sessionmaker(bind=engine)()
 
@@ -97,6 +102,7 @@ def test_store_ingest_source_result_persists_crawler_rows() -> None:
     chunk = db.get(CrawlerDocumentChunk, "doc-1-chunk-0")
     assert chunk.chunk_index == 0
     assert chunk.text == "chunk text"
+    assert chunk.source_type == "html"
     assert chunk.content_hash
 
     attachment = db.query(CrawlerAttachment).one()

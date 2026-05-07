@@ -19,7 +19,8 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 2
+    embedding_limit: 150
+    attachment_embedding_limit: 100
 
   portal_materials: &portal_materials
     category: materials
@@ -45,7 +46,8 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 2
+    embedding_limit: 100
+    attachment_embedding_limit: 200
 
   portal_faq: &portal_faq
     category: faq
@@ -67,7 +69,7 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 2
+    embedding_limit: 100
 
   portal_schedule: &portal_schedule
     category: academic_schedule
@@ -87,7 +89,7 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 2
+    embedding_limit: 50
 
   external_notice: &external_notice
     category: notice
@@ -112,7 +114,8 @@ defaults:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 2
+    embedding_limit: 100
+    attachment_embedding_limit: 100
 
 sources:
   - name: academic_schedule
@@ -127,7 +130,7 @@ sources:
     collect_patterns:
       - "selecttnschafsschdullistus.do"
     embed: true
-    embedding_limit: 2
+    embedding_limit: 20
 
   - name: graduation_requirements
     category: graduation
@@ -141,7 +144,7 @@ sources:
     collect_patterns:
       - "contents.do"
     embed: true
-    embedding_limit: 2
+    embedding_limit: 20
 
   - name: university_notices
     category: notice
@@ -167,7 +170,8 @@ sources:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 2
+    embedding_limit: 300
+    attachment_embedding_limit: 200
 
   - name: scholarship_support
     category: support
@@ -195,7 +199,8 @@ sources:
       - "mailto:"
     collect_seed_pages: false
     embed: true
-    embedding_limit: 2
+    embedding_limit: 300
+    attachment_embedding_limit: 200
 
   - name: student_life
     category: student_life
@@ -209,7 +214,7 @@ sources:
     collect_patterns:
       - "contents.do"
     embed: true
-    embedding_limit: 2
+    embedding_limit: 20
 
   - name: career_support
     category: career
@@ -223,7 +228,7 @@ sources:
     collect_patterns:
       - "contents.do"
     embed: true
-    embedding_limit: 2
+    embedding_limit: 20
 
   - name: electrical_engineering_shared_notice
     department: electrical_engineering_shared
@@ -1455,6 +1460,8 @@ department_sites:
       notice:
         seed_urls:
           - "https://www.kyonggi.ac.kr/miys/selectBbsNttList.do?key=6978&bbsNo=1073&sf.dc=85314&sf.dcof=of1&sf.of1=M&selfAt=Y"
+        embedding_limit: 300
+        attachment_embedding_limit: 200
         allowed_author_department_filters:
           - "청소년전공"
           - "청소년학"
@@ -1463,6 +1470,8 @@ department_sites:
       materials:
         seed_urls:
           - "https://www.kyonggi.ac.kr/miys/selectBbsNttList.do?key=6979&bbsNo=684&sf.dc=85314&sf.dcof=of2&sf.of2=M&selfAt=Y"
+        embedding_limit: 150
+        attachment_embedding_limit: 300
         allowed_keyword_filters:
           - "청소년학전공"
           - "청소년학"

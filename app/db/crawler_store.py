@@ -39,6 +39,8 @@ def store_ingest_source_result(
         status=source_report["status"],
         seen_at=completed_at,
     )
+    # Ensure FK parents are visible before dependent rows are flushed.
+    db.flush()
     document_count = _upsert_documents(
         db,
         source_name=source_name,
@@ -125,6 +127,8 @@ def _upsert_documents(
             for key, value in values.items():
                 setattr(row, key, value)
 
+        # Ensure the parent row exists before attachment/chunk FK checks run.
+        db.flush()
         _upsert_attachments(db, document=document, seen_at=seen_at)
     return len(documents)
 
@@ -182,6 +186,7 @@ def _upsert_chunks(
             "content_hash": content_hash,
             "title": chunk.title,
             "source_url": chunk.source_url,
+            "source_type": chunk.source_type,
             "status": status,
             "last_seen_at": seen_at,
         }

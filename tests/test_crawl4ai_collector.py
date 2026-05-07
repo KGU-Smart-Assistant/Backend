@@ -1,5 +1,6 @@
 from app.crawlers.crawl4ai_collector import (
     Crawl4AICollectorConfig,
+    _apply_attachment_parent_titles,
     _build_html_document,
     _extract_last_page_index,
     _extract_pagination_urls,
@@ -11,6 +12,8 @@ from app.crawlers.crawl4ai_collector import (
 )
 from datetime import datetime
 from types import SimpleNamespace
+
+from app.schemas import Document
 
 
 def test_should_collect_html_url_uses_collect_patterns() -> None:
@@ -141,6 +144,32 @@ def test_normalize_url_sorts_query_parameters() -> None:
     )
 
 
+def test_normalize_url_canonicalizes_board_detail_tracking_parameters() -> None:
+    normalized = _normalize_url(
+        "https://www.kyonggi.ac.kr/www/selectBbsNttView.do?"
+        "bbsNo=1073&key=6978&nttNo=622228&pageUnit=10&searchCnd=all"
+        "&sf.pnos=1073&sf.pnos=888&sf.dc=12416"
+    )
+
+    assert normalized == (
+        "https://www.kyonggi.ac.kr/www/selectBbsNttView.do?"
+        "bbsNo=1073&key=6978&nttNo=622228"
+    )
+
+
+def test_normalize_url_canonicalizes_board_list_tracking_parameters() -> None:
+    normalized = _normalize_url(
+        "https://www.kyonggi.ac.kr/www/selectBbsNttList.do?"
+        "bbsNo=1073&key=7520&pageIndex=3&pageUnit=10&searchCnd=all"
+        "&sf.pnos=1073&sf.pnos=888&sf.dc=12416"
+    )
+
+    assert normalized == (
+        "https://www.kyonggi.ac.kr/www/selectBbsNttList.do?"
+        "bbsNo=1073&key=7520&pageIndex=3&sf.dc=12416"
+    )
+
+
 def test_extract_last_page_index_from_korean_board_text() -> None:
     result = SimpleNamespace(
         markdown=SimpleNamespace(
@@ -175,6 +204,34 @@ def test_extract_pagination_urls_expands_board_page_indexes() -> None:
         "https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&pageIndex=2&selfAt=Y",
         "https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1&pageIndex=3&selfAt=Y",
     }
+
+
+def test_extract_pagination_urls_treats_zero_limit_as_unlimited() -> None:
+    config = Crawl4AICollectorConfig(
+        seed_urls=["https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1"],
+        follow_patterns=("bbsno=1073",),
+        allowed_path_prefixes=("/department/",),
+        max_pagination_pages=0,
+    )
+    result = SimpleNamespace(
+        markdown=SimpleNamespace(fit_markdown=""),
+        links={
+            "internal": [
+                {"href": "?pageIndex=1"},
+                {"href": "?pageIndex=2"},
+                {"href": "?pageIndex=3"},
+            ]
+        },
+    )
+
+    urls = _extract_pagination_urls(
+        url="https://example.com/department/selectBbsNttList.do?bbsNo=1073&key=1",
+        result=result,
+        allowed_domains={"example.com"},
+        config=config,
+    )
+
+    assert len(urls) == 3
 
 
 def test_within_page_limit_treats_zero_as_unlimited() -> None:
@@ -233,6 +290,28 @@ def test_build_html_document_extracts_metadata_from_board_detail() -> None:
         "https://example.com/files/plan.pdf",
         "https://example.com/downloadBbsFile.do?atchmnflNo=123",
     ]
+
+
+def test_apply_attachment_parent_titles_prefers_board_title() -> None:
+    document = Document(
+        doc_id="doc-1",
+        source_type="hwp",
+        source_url="https://example.com/downloadBbsFile.do?atchmnflNo=123",
+        title="B garbled hwp title",
+        content="attachment content",
+        collected_at=datetime(2026, 5, 6, 12, 0, 0),
+    )
+
+    _apply_attachment_parent_titles(
+        [document],
+        {
+            "https://example.com/downloadBbsFile.do?atchmnflNo=123": (
+                "2026학년도 1학기 성적향상장학금 신청 안내"
+            )
+        },
+    )
+
+    assert document.title == "2026학년도 1학기 성적향상장학금 신청 안내"
 
 
 def test_build_html_document_sanitizes_malformed_markdown_titles() -> None:

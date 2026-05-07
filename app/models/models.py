@@ -81,6 +81,7 @@ class CrawlerDocumentChunk(Base):
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
+    source_type: Mapped[str] = mapped_column(String(32), nullable=False, default="html")
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     last_seen_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 

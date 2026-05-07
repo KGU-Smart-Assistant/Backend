@@ -31,6 +31,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxtst6 \
     libglib2.0-0 \
     libdbus-1-3 \
+    tesseract-ocr \
+    tesseract-ocr-kor \
+    tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir -r requirements.txt

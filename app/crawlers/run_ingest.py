@@ -45,6 +45,8 @@ DEFAULT_EXCLUDE_PATTERNS = (
     "mailto:",
 )
 
+ATTACHMENT_SOURCE_TYPES = {"pdf", "docx", "hwp", "hwpx", "zip", "file"}
+
 
 def embed_chunks(*args, **kwargs):
     from app.crawlers import embed_chunks as _embed_chunks
@@ -56,6 +58,14 @@ def upsert_embedded_chunks(*args, **kwargs):
     from app.db.vector_store import upsert_embedded_chunks as _upsert_embedded_chunks
 
     return _upsert_embedded_chunks(*args, **kwargs)
+
+
+def delete_embedded_chunks_for_documents(*args, **kwargs):
+    from app.db.vector_store import (
+        delete_embedded_chunks_for_documents as _delete_embedded_chunks_for_documents,
+    )
+
+    return _delete_embedded_chunks_for_documents(*args, **kwargs)
 
 
 def store_ingest_source_result(*args, **kwargs):
@@ -336,6 +346,51 @@ def apply_runtime_overrides(
     return overridden
 
 
+def select_embedding_chunks(
+    chunks: List[Any],
+    *,
+    embedding_limit: int | None,
+    attachment_embedding_limit: int | None,
+) -> List[Any]:
+    if not chunks:
+        return []
+    if embedding_limit is None and attachment_embedding_limit is None:
+        return chunks
+
+    selected: List[Any] = []
+    seen_chunk_ids: set[str] = set()
+
+    main_limit = embedding_limit if embedding_limit is not None else len(chunks)
+    if main_limit > 0:
+        for chunk in chunks:
+            if len(selected) >= main_limit:
+                break
+            selected.append(chunk)
+            seen_chunk_ids.add(chunk.chunk_id)
+
+    if attachment_embedding_limit is not None and attachment_embedding_limit > 0:
+        attachment_count = 0
+        for chunk in chunks:
+            if attachment_count >= attachment_embedding_limit:
+                break
+            if chunk.chunk_id in seen_chunk_ids:
+                continue
+            if not _is_attachment_chunk(chunk):
+                continue
+            selected.append(chunk)
+            seen_chunk_ids.add(chunk.chunk_id)
+            attachment_count += 1
+
+    return selected
+
+
+def _is_attachment_chunk(chunk: Any) -> bool:
+    source_type = getattr(chunk, "source_type", "")
+    if source_type in ATTACHMENT_SOURCE_TYPES:
+        return True
+    return "downloadbbsfile.do" in getattr(chunk, "source_url", "").lower()
+
+
 def main(argv: List[str] | None = None) -> None:
     args = parse_args([] if argv is None else argv)
     if args.skip_embed and args.store_vectors:
@@ -385,11 +440,17 @@ def main(argv: List[str] | None = None) -> None:
 
         if source.get("embed", True) and chunks:
             embedding_limit = source.get("embedding_limit")
-            target_chunks = chunks[:embedding_limit] if embedding_limit else chunks
+            attachment_embedding_limit = source.get("attachment_embedding_limit")
+            target_chunks = select_embedding_chunks(
+                chunks,
+                embedding_limit=embedding_limit,
+                attachment_embedding_limit=attachment_embedding_limit,
+            )
             embedded_chunks = embed_chunks(target_chunks)
             embedded_count = len(embedded_chunks)
             total_embedded_chunks += embedded_count
             if args.store_vectors and embedded_chunks:
+                delete_embedded_chunks_for_documents(documents)
                 stored_count = upsert_embedded_chunks(
                     embedded_chunks,
                     category=source.get("category"),

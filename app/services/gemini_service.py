@@ -41,19 +41,30 @@ def _call_gemini(prompt: str) -> str:
             return response.text.strip()
         return ""
 
-    except Exception as e:
-        error_msg = str(e)
+    except Exception as exc:
+        error_msg = str(exc)
 
         print("\n" + "=" * 50)
         print(f"GEMINI ERROR: {error_msg}")
         print("=" * 50 + "\n")
 
         if "429" in error_msg:
-            return "?꾩옱 ?ъ슜?됱씠 ?덈Т 留롮븘 援ш???李⑤떒?덉뒿?덈떎. 1遺꾨쭔 ?ъ뿀?ㅺ? ?ㅼ떆 ?뚮윭蹂댁꽭??"
+            return (
+                "현재 Gemini API 사용량 제한에 도달했습니다. "
+                "잠시 후 다시 시도해 주세요."
+            )
+        if "503" in error_msg or "UNAVAILABLE" in error_msg:
+            return (
+                "현재 Gemini 모델 수요가 높아 응답을 생성하지 못했습니다. "
+                "잠시 후 다시 시도해 주세요."
+            )
         if "404" in error_msg:
-            return "紐⑤뜽 ?대쫫??李얠쓣 ???놁뒿?덈떎. (2.0-flash-lite ?ъ떆???꾩슂)"
+            return (
+                "설정된 Gemini 모델을 찾을 수 없습니다. "
+                "GEMINI_MODEL 환경변수를 확인해 주세요."
+            )
 
-        return f"?쒕쾭 ?먮윭媛 諛쒖깮?덉뒿?덈떎: {error_msg}"
+        return f"서버 오류가 발생했습니다: {error_msg}"
 
 
 def get_gemini_response(user_input: str) -> str:
@@ -71,10 +82,11 @@ def get_gemini_response_with_context(
 
 def _get_gemini_response_with_text_context(user_input: str, context: str) -> str:
     prompt = f"""
-You are a helpful university assistant.
+You are a Korean university assistant for Kyonggi University.
 Answer the user's question using only the information in the context.
 If the context does not contain enough information, say that the available
 information is insufficient and ask for a more specific question.
+Do not invent dates, eligibility rules, amounts, office names, or URLs.
 
 Context:
 {context}
@@ -82,7 +94,7 @@ Context:
 User question:
 {user_input}
 
-Answer:
+Answer in Korean:
 """
     return _call_gemini(prompt)
 
@@ -94,8 +106,8 @@ def _get_gemini_response_with_search_results(
     context = _format_search_context(search_results)
     prompt = f"""
 아래 경기대학교 수집 자료만 근거로 답변하세요.
-자료에 없는 내용은 모른다고 답하세요.
-신청 기간, 자격, 제출 서류, 금액처럼 자료에 직접 없는 세부사항은 추측하지 마세요.
+자료에 없는 내용은 모른다고 말하세요.
+신청 기간, 자격, 제출 서류, 금액, 제한 조건처럼 자료에 직접 없는 항목은 추측하지 마세요.
 자료가 부족하면 확인 가능한 공지 제목과 URL을 안내하세요.
 
 참고 자료:

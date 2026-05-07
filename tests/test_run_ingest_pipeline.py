@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from app.crawlers import run_ingest
-from app.schemas import Document
+from app.schemas import Document, DocumentChunk
 
 
 def _build_document(
@@ -282,6 +282,48 @@ def test_apply_runtime_overrides_updates_optional_settings() -> None:
     assert source["embed"] is True
 
 
+def test_select_embedding_chunks_includes_attachment_quota() -> None:
+    chunks = [
+        DocumentChunk(
+            chunk_id=f"main-{index}",
+            doc_id="main-doc",
+            chunk_index=index,
+            text=f"main chunk {index}",
+            title="Main notice",
+            source_url="https://example.com/notice",
+            source_type="html",
+        )
+        for index in range(3)
+    ]
+    chunks.extend(
+        [
+            DocumentChunk(
+                chunk_id=f"attachment-{index}",
+                doc_id="attachment-doc",
+                chunk_index=index,
+                text=f"attachment chunk {index}",
+                title="Attachment",
+                source_url=f"https://example.com/downloadBbsFile.do?atchmnflNo={index}",
+                source_type="pdf",
+            )
+            for index in range(3)
+        ]
+    )
+
+    selected = run_ingest.select_embedding_chunks(
+        chunks,
+        embedding_limit=2,
+        attachment_embedding_limit=2,
+    )
+
+    assert [chunk.chunk_id for chunk in selected] == [
+        "main-0",
+        "main-1",
+        "attachment-0",
+        "attachment-1",
+    ]
+
+
 def test_run_ingest_main_applies_cli_filters_and_runtime_overrides(monkeypatch, capsys) -> None:
     now = datetime(2026, 4, 10, 12, 0, 0)
     source_config = [
@@ -402,6 +444,12 @@ def test_run_ingest_main_stores_embedded_chunks_when_requested(monkeypatch, caps
     monkeypatch.setattr(run_ingest, "load_sources_config", lambda _: source_config)
     monkeypatch.setattr(run_ingest, "collect_documents_with_crawl4ai", lambda _: documents)
     monkeypatch.setattr(run_ingest, "embed_chunks", lambda chunks: [object() for _ in chunks])
+    deleted_documents = []
+    monkeypatch.setattr(
+        run_ingest,
+        "delete_embedded_chunks_for_documents",
+        lambda docs: deleted_documents.extend(docs),
+    )
     monkeypatch.setattr(run_ingest, "upsert_embedded_chunks", lambda chunks, **_: len(chunks))
     monkeypatch.setattr(run_ingest, "default_report_output_dir", lambda: Path(".tmp/test-reports"))
     monkeypatch.setattr(
@@ -413,6 +461,7 @@ def test_run_ingest_main_stores_embedded_chunks_when_requested(monkeypatch, caps
     run_ingest.main(["--source", "alpha_notice", "--store-vectors"])
 
     captured = capsys.readouterr()
+    assert deleted_documents == documents
     assert "stored_chunks=2" in captured.out
     assert "total_stored_chunks=2" in captured.out
 

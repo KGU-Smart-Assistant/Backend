@@ -358,9 +358,133 @@ def _is_hwp_compressed(ole) -> bool:
 
 def _clean_hwp_text(text: str) -> str:
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", " ", text)
+    text = re.sub(r"그림입니다\.", " ", text)
+    text = re.sub(
+        r"원본 그림의 이름\s*:\s*.*?(?=원본 그림의 크기|프로그램 이름|$)",
+        " ",
+        text,
+    )
+    text = re.sub(
+        r"원본 그림의 크기\s*:\s*.*?(?=프로그램 이름|$)",
+        " ",
+        text,
+    )
+    text = re.sub(
+        r"프로그램 이름\s*:\s*[A-Za-z0-9 ._-]+",
+        " ",
+        text,
+    )
+    text = re.sub(
+        r"[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ\s.,:;!?()\[\]{}<>/%~+\-=·ㆍ…'\"“”‘’→←↔①-⑳一-龥]",
+        " ",
+        text,
+    )
+    text = re.sub(
+        r"[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ\s.,:;!?()\[\]{}<>/%~+\-=·ㆍ…'\"“”‘’→←↔①-⑳]",
+        " ",
+        text,
+    )
     text = re.sub(r"[ \t]+", " ", text)
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    lines = [
+        line
+        for line in (_clean_hwp_line(line) for line in text.splitlines())
+        if line and _looks_like_useful_text(line)
+    ]
+    return _clean_hwp_text("\n".join(lines))
+
+
+def _clean_hwp_line(value: str) -> str:
+    line = _normalize_extracted_text_line(value)
+    if any(
+        token in line
+        for token in ("그림입니다", "원본 그림의", "프로그램 이름")
+    ):
+        return ""
+    year_match = re.search(r"\d{4}[-.년]", line)
+    if year_match:
+        prefix = line[: year_match.start()]
+        prefix_tokens = re.findall(r"[0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]+", prefix)
+        short_prefix_tokens = [token for token in prefix_tokens if len(token) <= 2]
+        mostly_short_noise = bool(prefix_tokens) and (
+            len(short_prefix_tokens) / len(prefix_tokens) >= 0.6
+        )
+        if ":" not in prefix and (mostly_short_noise or not _looks_like_useful_text(prefix)):
+            line = line[year_match.start() :]
+    return re.sub(r"^(?:[A-Za-z가-힣]\s+){1,6}(?=\d{4})", "", line).strip()
+
+
+def _clean_hwp_text(text: str) -> str:
+    text = _fix_extracted_text(text)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", " ", text)
+    lines = [
+        line
+        for line in (_clean_hwp_line(line) for line in text.splitlines())
+        if line and _looks_like_useful_text(line)
+    ]
     return "\n".join(lines)
+
+
+def _fix_extracted_text(text: str) -> str:
+    try:
+        from ftfy import fix_text
+    except ImportError:
+        return text
+    return fix_text(text)
+
+
+def _clean_hwp_line(value: str) -> str:
+    line = _normalize_extracted_text_line(value)
+    if _looks_like_image_metadata(line):
+        return ""
+
+    line = re.sub(
+        r"[^0-9A-Za-z\uac00-\ud7a3\u3131-\u318e\s.,:;!?()\[\]{}<>/%~+\-=\u2190-\u2194]",
+        " ",
+        line,
+    )
+    line = _normalize_extracted_text_line(line)
+    if _looks_like_short_token_noise(line):
+        return ""
+
+    year_match = re.search(r"\d{4}[-.\ub144]", line)
+    if year_match:
+        prefix = line[: year_match.start()]
+        prefix_tokens = re.findall(r"[0-9A-Za-z\uac00-\ud7a3\u3131-\u318e]+", prefix)
+        short_prefix_tokens = [token for token in prefix_tokens if len(token) <= 2]
+        mostly_short_noise = bool(prefix_tokens) and (
+            len(short_prefix_tokens) / len(prefix_tokens) >= 0.6
+        )
+        if ":" not in prefix and (mostly_short_noise or not _looks_like_useful_text(prefix)):
+            line = line[year_match.start() :]
+
+    return re.sub(
+        r"^(?:[A-Za-z\uac00-\ud7a3\u3131-\u318e]\s+){1,8}(?=\d{4})",
+        "",
+        line,
+    ).strip()
+
+
+def _looks_like_short_token_noise(line: str) -> bool:
+    tokens = re.findall(r"[0-9A-Za-z\uac00-\ud7a3\u3131-\u318e]+", line)
+    if any(char.isdigit() for char in line):
+        return False
+    short_tokens = [token for token in tokens if len(token) <= 2]
+    if len(tokens) < 3:
+        return bool(tokens) and len(short_tokens) == len(tokens) and len(line) <= 10
+    return len(short_tokens) / len(tokens) >= 0.8
+
+
+def _looks_like_image_metadata(line: str) -> bool:
+    lowered = line.lower()
+    return any(
+        token in lowered
+        for token in (
+            "\uadf8\ub9bc\uc785\ub2c8\ub2e4",
+            "\uc6d0\ubcf8 \uadf8\ub9bc\uc758",
+            "\ud504\ub85c\uadf8\ub7a8 \uc774\ub984",
+            "imageready",
+        )
+    )
 
 
 def _extract_pdf_text(path: Path) -> str:
@@ -549,7 +673,37 @@ def _should_skip_title_candidate(value: str) -> bool:
         return True
     if re.fullmatch(r"-\s*\[.+\]\(.+\)", normalized):
         return True
+    if not _looks_like_useful_text(normalized):
+        return True
     return False
+
+
+def _normalize_extracted_text_line(value: str) -> str:
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def _looks_like_useful_text(value: str) -> bool:
+    normalized = value.strip()
+    if len(normalized) < 2:
+        return False
+
+    meaningful = re.findall(r"[0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]", normalized)
+    if not meaningful:
+        return False
+
+    return len(meaningful) / max(len(normalized), 1) >= 0.35
+
+
+def _looks_like_useful_text(value: str) -> bool:
+    normalized = value.strip()
+    if len(normalized) < 2:
+        return False
+
+    meaningful = re.findall(r"[0-9A-Za-z\uac00-\ud7a3\u3131-\u318e]", normalized)
+    if not meaningful:
+        return False
+
+    return len(meaningful) / max(len(normalized), 1) >= 0.35
 
 
 def _detect_content_type(
