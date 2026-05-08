@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     translation_provider: str = "google"
     google_translation_api_url: str = "https://translation.googleapis.com/language/translate/v2"
     database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/kgusmart"
+    intent_classifier_model_name: str | None = None
+    intent_classifier_confidence_threshold: float = 0.7
+    intent_classifier_device: int = -1
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
